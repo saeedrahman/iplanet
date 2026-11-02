@@ -23,7 +23,7 @@
   <style>
     :root {
       --bg-color: #08090c;
-      --card-bg: rgba(14, 18, 24, 0.88);
+      --card-bg: rgba(14, 18, 24, 0.92);
       --accent: #ff0055;       /* Warning Red/Pink */
       --cyan: #00ffcc;         /* HUD Cyan */
       --text: #d0d7de;
@@ -43,9 +43,9 @@
       font-family: 'Share Tech Mono', monospace;
       min-height: 100vh;
       display: flex;
-      justify-content: center;
+      flex-direction: column;
       align-items: center;
-      padding: 20px;
+      padding: 16px;
       position: relative;
       overflow-x: hidden;
     }
@@ -74,6 +74,38 @@
       z-index: 0;
     }
 
+    /* Sticky Top Action Bar for Fullscreen Button */
+    .top-bar {
+      width: 100%;
+      max-width: 480px;
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 12px;
+      z-index: 10;
+    }
+
+    .fullscreen-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      background: rgba(0, 255, 204, 0.1);
+      border: 1px solid var(--cyan);
+      color: var(--cyan);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.8rem;
+      letter-spacing: 1px;
+      cursor: pointer;
+      text-transform: uppercase;
+      box-shadow: 0 0 10px rgba(0, 255, 204, 0.2);
+      transition: all 0.2s ease;
+    }
+
+    .fullscreen-btn:active {
+      background: rgba(0, 255, 204, 0.3);
+      transform: scale(0.97);
+    }
+
     .dossier-card {
       position: relative;
       z-index: 1;
@@ -82,7 +114,7 @@
       background: var(--card-bg);
       border: 1px solid var(--border);
       box-shadow: 0 0 25px rgba(0, 255, 204, 0.15), inset 0 0 15px rgba(0, 0, 0, 0.8);
-      padding: 28px 24px;
+      padding: 24px 20px;
       backdrop-filter: blur(8px);
     }
 
@@ -217,34 +249,12 @@
       background: rgba(0, 0, 0, 0.2);
       padding: 14px;
       border: 1px solid rgba(255, 255, 255, 0.05);
-      margin-bottom: 16px;
     }
 
     .bio-container::first-letter {
       font-size: 1.4rem;
       color: var(--cyan);
       font-weight: bold;
-    }
-
-    /* Fullscreen Trigger Button */
-    .fullscreen-btn {
-      display: block;
-      width: 100%;
-      padding: 12px;
-      background: rgba(0, 255, 204, 0.08);
-      border: 1px solid var(--cyan);
-      color: var(--cyan);
-      font-family: 'Share Tech Mono', monospace;
-      font-size: 0.85rem;
-      letter-spacing: 1.5px;
-      cursor: pointer;
-      text-transform: uppercase;
-      transition: background 0.2s ease, box-shadow 0.2s ease;
-    }
-
-    .fullscreen-btn:hover, .fullscreen-btn:active {
-      background: rgba(0, 255, 204, 0.2);
-      box-shadow: 0 0 10px rgba(0, 255, 204, 0.3);
     }
 
     /* System Status Messages */
@@ -266,6 +276,13 @@
 
   <div class="bg-grid"></div>
 
+  <!-- Permanent top bar with fullscreen button -->
+  <div class="top-bar">
+    <button id="fs-btn" class="fullscreen-btn" onclick="toggleFullScreen()">
+      [ ⛶ FULLSCREEN ]
+    </button>
+  </div>
+
   <div class="dossier-card" id="app">
     <div class="terminal-message">
       <p>INITIALIZING DATA LINK...</p>
@@ -275,35 +292,38 @@
 
   <script>
     // -------------------------------------------------------------
-    // 1. PASTE YOUR PUBLISHED GOOGLE SHEET CSV URL HERE:
+    // PASTE YOUR PUBLISHED GOOGLE SHEET CSV URL HERE:
     // -------------------------------------------------------------
     const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRlmhjhIPa6cbXQecsfKAlLoLilr1NAV2QGqepe_rf9_E3CTB-T-Jlpd1rge93AsT-2CtXoh5spt3qY/pub?gid=0&single=true&output=csv";
 
-    // Fallback placeholder image if no photo URL is supplied
     const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300' fill='%23111'%3E%3Crect width='100%25' height='100%25'/%3E%3Ctext x='50%25' y='50%25' fill='%2300ffcc' font-family='monospace' font-size='16' text-anchor='middle'%3E%5B IMAGE CORRUPTED / NOT FOUND %5D%3C/text%3E%3C/svg%3E";
 
-    // Extract query parameter ?id=... from the URL
     function getQueryParam(param) {
       const urlParams = new URLSearchParams(window.location.search);
       return urlParams.get(param);
     }
 
-    // Toggle full-screen mode & hide the trigger button
     function toggleFullScreen() {
       const doc = window.document;
       const docEl = doc.documentElement;
 
-      const requestFullScreen = docEl.requestFullscreen || docEl.mozRequestFullScreen || docEl.webkitRequestFullScreen || docEl.msRequestFullscreen;
+      const requestFullScreen = docEl.requestFullscreen || docEl.webkitRequestFullScreen || docEl.mozRequestFullScreen || docEl.msRequestFullscreen;
 
-      if (!doc.fullscreenElement && !doc.mozFullScreenElement && !doc.webkitFullscreenElement && !doc.msFullscreenElement) {
+      if (!doc.fullscreenElement && !doc.webkitFullscreenElement && !doc.mozFullScreenElement && !doc.msFullscreenElement) {
         if (requestFullScreen) {
-          requestFullScreen.call(docEl);
+          requestFullScreen.call(docEl).catch(() => {});
+        } else {
+          // iOS Safari fallback: Scroll down by 1px to auto-collapse the Safari bar
+          window.scrollTo(0, 1);
         }
+        document.getElementById('fs-btn').innerText = "[ ⛶ EXIT FULLSCREEN ]";
+      } else {
+        const exitFullScreen = doc.exitFullscreen || doc.webkitExitFullscreen || doc.mozCancelFullScreen || doc.msExitFullscreen;
+        if (exitFullScreen) {
+          exitFullScreen.call(doc);
+        }
+        document.getElementById('fs-btn').innerText = "[ ⛶ FULLSCREEN ]";
       }
-      
-      // Hide button once tapped
-      const btn = document.getElementById('fs-btn');
-      if (btn) btn.style.display = 'none';
     }
 
     function renderError(title, subtitle) {
@@ -320,6 +340,20 @@
     }
 
     function renderDossier(data) {
+      // Find case-insensitive keys
+      const keys = Object.keys(data);
+      const getKey = (name) => {
+        const found = keys.find(k => k.trim().toLowerCase() === name.toLowerCase());
+        return found ? data[found] : '';
+      };
+
+      const name = getKey('name');
+      const role = getKey('role');
+      const actor = getKey('actor');
+      const faction = getKey('faction');
+      const bio = getKey('bio');
+      const photo = getKey('photo');
+
       document.getElementById('app').innerHTML = `
         <div class="system-header">
           <span>ARCHIVE REGISTRY // SECTOR 07</span>
@@ -328,30 +362,26 @@
 
         <div class="photo-frame">
           <div class="reticle">REC ● [TARGET ACQUIRED]</div>
-          <img src="${data.photo && data.photo.trim() !== '' ? data.photo : DEFAULT_AVATAR}" alt="${data.name}" onerror="this.src='${DEFAULT_AVATAR}'">
+          <img src="${photo && photo.trim() !== '' ? photo : DEFAULT_AVATAR}" alt="${name}" onerror="this.src='${DEFAULT_AVATAR}'">
         </div>
 
-        <h1 class="character-name">${data.name || 'UNKNOWN SUBJECT'}</h1>
-        <div class="character-role">${data.role || 'ROLE UNASSIGNED'}</div>
+        <h1 class="character-name">${name || 'UNKNOWN SUBJECT'}</h1>
+        <div class="character-role">${role || 'ROLE UNASSIGNED'}</div>
 
         <div class="meta-grid">
           <div class="meta-item">
             <span>PERFORMED BY</span>
-            <strong>${data.actor || 'ANONYMOUS'}</strong>
+            <strong>${actor || 'ANONYMOUS'}</strong>
           </div>
           <div class="meta-item">
             <span>FACTION / STATUS</span>
-            <strong>${data.faction || 'CIVILIAN'}</strong>
+            <strong>${faction || 'CIVILIAN'}</strong>
           </div>
         </div>
 
         <div class="bio-container">
-          ${data.bio || 'Record corrupted or redacted by administrative order.'}
+          ${bio || 'Record corrupted or redacted by administrative order.'}
         </div>
-
-        <button id="fs-btn" class="fullscreen-btn" onclick="toggleFullScreen()">
-          [ MAXIMIZE TERMINAL / FULLSCREEN ]
-        </button>
       `;
     }
 
@@ -367,17 +397,24 @@
         download: true,
         header: true,
         skipEmptyLines: true,
+        transformHeader: function(h) {
+          // Strips Byte Order Mark (\ufeff), quotes, and excess spaces
+          return h.replace(/^\ufeff/, '').trim().toLowerCase();
+        },
         complete: function(results) {
           const records = results.data;
-          
-          // Match by 'id' column (case-insensitive and trimmed)
-          const matched = records.find(row => 
-            row.id && row.id.toString().trim().toLowerCase() === targetId.trim().toLowerCase()
-          );
+          const cleanTarget = decodeURIComponent(targetId).trim().toLowerCase();
+
+          const matched = records.find(row => {
+            const idKey = Object.keys(row).find(k => k.trim().toLowerCase() === 'id');
+            if (!idKey || row[idKey] === undefined || row[idKey] === null) return false;
+            return row[idKey].toString().trim().toLowerCase() === cleanTarget;
+          });
 
           if (matched) {
             renderDossier(matched);
           } else {
+            console.warn("Parsed Records:", records);
             renderError("SUBJECT NOT FOUND", `ID [${targetId}] does not exist in central surveillance records.`);
           }
         },
