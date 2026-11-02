@@ -1,138 +1,3 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Google Sheets API Test Sandbox</title>
-    <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            max-width: 900px;
-            margin: 40px auto;
-            padding: 0 20px;
-            background-color: #f8f9fa;
-            color: #333;
-        }
-        .card {
-            background: white;
-            padding: 25px;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-            margin-bottom: 20px;
-        }
-        .form-group {
-            margin-bottom: 15px;
-        }
-        label {
-            display: block;
-            font-weight: 600;
-            margin-bottom: 5px;
-            font-size: 14px;
-        }
-        input {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            box-sizing: border-box;
-            font-size: 14px;
-        }
-        button {
-            background-color: #1a73e8;
-            color: white;
-            border: none;
-            padding: 12px 20px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 14px;
-            width: 100%;
-        }
-        button:hover {
-            background-color: #1557b0;
-        }
-        pre {
-            background-color: #272822;
-            color: #f8f8f2;
-            padding: 15px;
-            border-radius: 4px;
-            overflow-x: auto;
-            font-family: "Courier New", Courier, monospace;
-            font-size: 13px;
-            max-height: 400px;
-        }
-        .error {
-            color: #d93025;
-            background-color: #fce8e6;
-            padding: 10px;
-            border-radius: 4px;
-            margin-top: 10px;
-            display: none;
-        }
-        .tabs {
-            display: flex;
-            border-bottom: 20px;
-            margin-top: 20px;
-        }
-        .tab-btn {
-            background: none;
-            color: #5f6368;
-            border: none;
-            padding: 10px 20px;
-            cursor: pointer;
-            font-weight: 500;
-            width: auto;
-            border-bottom: 2px solid transparent;
-        }
-        .tab-btn.active {
-            color: #1a73e8;
-            border-bottom: 2px solid #1a73e8;
-        }
-        .tab-content {
-            display: none;
-        }
-        .tab-content.active {
-            display: block;
-        }
-    </style>
-</head>
-<body>
-
-    <h2>Google Sheets Read-Only Database Test</h2>
-    <p style="color: #666; margin-top: -10px;">Ensure your Google Sheet is shared as <strong>"Anyone with the link can view"</strong> before testing.</p>
-
-    <div class="card">
-        <div class="form-group">
-            <label for="apiKey">Google Cloud API Key</label>
-            <input type="password" id="apiKey" placeholder="AIzaSy...">
-        </div>
-        <div class="form-group">
-            <label for="sheetId">Spreadsheet ID</label>
-            <input type="text" id="sheetId" placeholder="1wX_..." />
-        </div>
-        <div class="form-group">
-            <label for="range">Sheet Name & Range (e.g. Sheet1!A1:E100)</label>
-            <input type="text" id="range" value="Sheet1!A1:Z100">
-        </div>
-        <button onclick="fetchSheetData()">Query Database</button>
-        <div id="errorMessage" class="error"></div>
-    </div>
-
-    <div id="resultsCard" class="card" style="display: none;">
-        <h3>Database Response</h3>
-        <div class="tabs">
-            <button class="tab-btn active" onclick="switchTab('formatted')">Clean Objects (JSON)</button>
-            <button class="tab-btn" onclick="switchTab('raw')">Raw Array Response</button>
-        </div>
-
-        <div id="formattedTab" class="tab-content active">
-            <pre><code id="formattedOutput">Fetching...</code></pre>
-        </div>
-        <div id="rawTab" class="tab-content">
-            <pre><code id="rawOutput">Fetching...</code></pre>
-        </div>
-    </div>
-
     <script>
         async function fetchSheetData() {
             const apiKey = document.getElementById('apiKey').value.trim();
@@ -150,14 +15,13 @@
                 return;
             }
 
-            // Encode the range to handle special characters or spaces in the sheet name safely
             const encodedRange = encodeURIComponent(range);
-            // DELETE YOUR OLD URL LINE AND PASTE THIS EXACTLY:
-            const correctUrl = "https://googleapis.com/" + sheetId + "/values/" + encodedRange + "?key=" + apiKey;
+            
+            // Fixed URL format using explicit concatenation
+            const finalUrl = "https://googleapis.com" + sheetId + "/values/" + encodedRange + "?key=" + apiKey;
 
             try {
-                const response = await fetch(correctUrl);
-
+                const response = await fetch(finalUrl);
                 const data = await response.json();
 
                 if (!response.ok) {
@@ -170,10 +34,10 @@
 
                 resultsCard.style.display = 'block';
                 
-                // 1. Render Raw Array Structure
+                // Render Raw Array Structure
                 document.getElementById('rawOutput').textContent = JSON.stringify(data, null, 2);
 
-                // 2. Render Formatted Key-Value Database Structure
+                // Render Formatted Key-Value Database Structure
                 const databaseJson = convertRowsToObjects(data.values);
                 document.getElementById('formattedOutput').textContent = JSON.stringify(databaseJson, null, 2);
 
@@ -182,15 +46,13 @@
             }
         }
 
-        // Helper function mapping row indices to header titles
         function convertRowsToObjects(rows) {
-            const headers = rows[0]; // First row contains structural headers
-            const dataRows = rows.slice(1); // Remaining array items represent data records
+            const headers = rows[0]; 
+            const dataRows = rows.slice(1); 
 
             return dataRows.map(row => {
                 const record = {};
                 headers.forEach((header, index) => {
-                    // Handle trailing blank cells gracefully
                     record[header] = row[index] !== undefined ? row[index] : "";
                 });
                 return record;
@@ -216,5 +78,3 @@
             }
         }
     </script>
-</body>
-</html>
