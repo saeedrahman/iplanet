@@ -231,6 +231,7 @@
       font-size: 0.82rem;
       border-bottom: 1px dotted rgba(255, 255, 255, 0.08);
       padding-bottom: 5px;
+      gap: 8px;
     }
 
     .stat-row:last-child {
@@ -242,22 +243,25 @@
       color: var(--text-muted);
       text-transform: uppercase;
       letter-spacing: 0.5px;
+      font-size: 0.78rem;
     }
 
-    /* Star Visuals */
+    /* Star Visuals (Optimized for 10 stars) */
     .star-display {
-      letter-spacing: 3px;
-      font-size: 0.95rem;
+      letter-spacing: 1.5px;
+      font-size: 0.75rem;
       white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
     }
 
     .star-filled {
       color: var(--cyan);
-      text-shadow: 0 0 6px rgba(0, 255, 204, 0.5);
+      text-shadow: 0 0 5px rgba(0, 255, 204, 0.6);
     }
 
     .star-empty {
-      color: rgba(255, 255, 255, 0.15);
+      color: rgba(255, 255, 255, 0.12);
     }
 
     /* Danger Star Override for Creativity */
@@ -280,10 +284,10 @@
 
     .stat-row.creativity-alert .warning-tag {
       color: var(--accent-danger);
-      font-size: 0.7rem;
-      margin-left: 6px;
+      font-size: 0.65rem;
+      margin-left: 4px;
       font-weight: bold;
-      letter-spacing: 1px;
+      letter-spacing: 0.5px;
     }
 
     /* Behavioral / Appraisal Notes */
@@ -363,17 +367,23 @@
     // -------------------------------------------------------------
     const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRlmhjhIPa6cbXQecsfKAlLoLilr1NAV2QGqepe_rf9_E3CTB-T-Jlpd1rge93AsT-2CtXoh5spt3qY/pub?output=csv";
 
-    // Set the max star scale (5 or 10 based on your scoring system)
-    const MAX_STARS = 5;
+    // Star rating scale
+    const MAX_STARS = 10;
 
     function getQueryParam(param) {
       const urlParams = new URLSearchParams(window.location.search);
       return urlParams.get(param);
     }
 
-    // Convert numeric score into filled and empty stars
+    // Convert numeric score into filled and empty stars out of 10
     function formatStars(scoreRaw, maxStars = MAX_STARS) {
-      const score = parseInt(scoreRaw, 10);
+      if (scoreRaw === undefined || scoreRaw === null) {
+        return `<span class="star-display"><span class="star-empty">${'☆'.repeat(maxStars)}</span></span>`;
+      }
+      // Extract number even if formatted like "7/10" or "8 "
+      const numMatch = scoreRaw.toString().match(/\d+/);
+      const score = numMatch ? parseInt(numMatch[0], 10) : NaN;
+
       if (isNaN(score) || score <= 0) {
         return `<span class="star-display"><span class="star-empty">${'☆'.repeat(maxStars)}</span></span>`;
       }
@@ -398,30 +408,38 @@
 
     function renderDossier(data) {
       const keys = Object.keys(data);
-      const getVal = (name) => {
-        // Tolerates subtle space or underscore variations in header spelling
-        const normalizedTarget = name.replace(/[\s_]+/g, '').toLowerCase();
-        const found = keys.find(k => k.replace(/[\s_]+/g, '').toLowerCase() === normalizedTarget);
-        return found && data[found] ? data[found].trim() : '---';
+
+      // Robust fuzzy search that strips underscores, spaces, hyphens and special chars
+      const getVal = (possibleNames) => {
+        const names = Array.isArray(possibleNames) ? possibleNames : [possibleNames];
+        for (const name of names) {
+          const normTarget = name.toLowerCase().replace(/[^a-z0-9]/g, '');
+          const found = keys.find(k => k.toLowerCase().replace(/[^a-z0-9]/g, '').includes(normTarget));
+          if (found && data[found] !== undefined && data[found] !== null && data[found].toString().trim() !== '') {
+            return data[found].toString().trim();
+          }
+        }
+        return '---';
       };
 
-      // Extracted fields
-      const idNum = getVal('id_number');
-      const identity = getVal('identity');
-      const prodDate = getVal('date_of_production');
-      const mathSci = getVal('mathematics_scientific_ability');
-      const linguistic = getVal('linguistic_ability');
-      const discipline = getVal('discipline_obedience');
-      const physical = getVal('physical_skill');
-      const conformity = getVal('social_conformity');
-      const intelligence = getVal('overall_intelligence');
-      const creativity = getVal('creativity_individuality');
-      const notableTrait = getVal('notable_trait');
-      const areaConcern = getVal('area_of_concern');
+      // Extracted fields with synonyms to prevent sheet formatting mismatches
+      const idNum = getVal(['id_number', 'idnumber', 'id']);
+      const identity = getVal(['identity', 'name', 'unit']);
+      const prodDate = getVal(['date_of_production', 'production_date', 'date']);
+      const mathSci = getVal(['mathematics_scientific_ability', 'mathematics', 'math', 'scientific']);
+      const linguistic = getVal(['linguistic_ability', 'linguistic', 'language']);
+      const discipline = getVal(['discipline_obedience', 'discipline', 'obedience']);
+      const physical = getVal(['physical_skill', 'physical']);
+      const conformity = getVal(['social_conformity', 'conformity']);
+      const intelligence = getVal(['overall_intelligence', 'intelligence']);
+      const creativity = getVal(['creativity_individuality', 'creativity', 'individuality']);
+      const notableTrait = getVal(['notable_trait', 'trait']);
+      const areaConcern = getVal(['area_of_concern', 'concern']);
 
-      // Threat condition: 3+ out of 5 stars (or 6+ out of 10)
-      const creativityScore = parseInt(creativity, 10) || 0;
-      const isSubversive = (MAX_STARS === 5 && creativityScore >= 3) || (MAX_STARS === 10 && creativityScore >= 6);
+      // Threat condition: 6 or more stars out of 10
+      const creativityMatch = creativity.match(/\d+/);
+      const creativityScore = creativityMatch ? parseInt(creativityMatch[0], 10) : 0;
+      const isSubversive = creativityScore >= 6;
 
       const appContainer = document.getElementById('app');
       if (isSubversive) {
@@ -453,7 +471,7 @@
           </div>
         </div>
 
-        <div class="section-title">PSYCH-APTITUDE METRICS</div>
+        <div class="section-title">PSYCH-APTITUDE METRICS [OUT OF 10]</div>
         <div class="stat-list">
           <div class="stat-row">
             <span class="stat-label">Overall Intelligence</span>
@@ -495,7 +513,7 @@
         ${isSubversive ? `
           <div class="alert-panel hazard-flag">
             <span class="label">CRITICAL RECONDITIONING ADVISORY</span>
-            <p><strong>ALERT:</strong> Unit exhibits heightened creativity and individualist thought patterns (${creativityScore}/${MAX_STARS} stars). Severe non-conformity threat. Recommend immediate cognitive realignment.</p>
+            <p><strong>ALERT:</strong> Unit exhibits heightened creativity and individualist thought patterns (${creativityScore}/10 stars). Severe non-conformity threat. Recommend immediate cognitive realignment.</p>
           </div>
         ` : ''}
 
@@ -524,17 +542,16 @@
         header: true,
         skipEmptyLines: true,
         transformHeader: function(h) {
-          // Strips Byte Order Mark (\ufeff), quotes, and excess spaces
           return h.replace(/^\ufeff/, '').trim().toLowerCase();
         },
         complete: function(results) {
           const records = results.data;
           const cleanTarget = decodeURIComponent(targetId).trim().toLowerCase();
 
-          // Match 'id_number' (or 'id' as fallback)
+          // Match 'id_number' or 'id'
           const matched = records.find(row => {
             const idKey = Object.keys(row).find(k => {
-              const cleanedKey = k.replace(/[\s_]+/g, '').toLowerCase();
+              const cleanedKey = k.replace(/[^a-z0-9]/g, '').toLowerCase();
               return cleanedKey === 'idnumber' || cleanedKey === 'id';
             });
             if (!idKey || row[idKey] === undefined || row[idKey] === null) return false;
