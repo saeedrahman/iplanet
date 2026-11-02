@@ -2,22 +2,20 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ARCHIVE // SUBJECT DOSSIER</title>
-  
-  <!-- Mobile & PWA Fullscreen Meta Tags -->
+
+  <!-- PWA & Mobile Viewport Styling -->
+  <meta name="theme-color" content="#08090c">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Archive">
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="theme-color" content="#08090c">
 
-  <!-- Retro terminal font -->
+  <!-- Retro terminal fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@500;800;900&display=swap" rel="stylesheet">
 
-  <!-- PapaParse for CSV parsing -->
+  <!-- PapaParse for robust CSV parsing -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 
   <style>
@@ -43,9 +41,9 @@
       font-family: 'Share Tech Mono', monospace;
       min-height: 100vh;
       display: flex;
-      flex-direction: column;
+      justify-content: center;
       align-items: center;
-      padding: 16px;
+      padding: 20px 16px;
       position: relative;
       overflow-x: hidden;
     }
@@ -72,38 +70,6 @@
       background-size: 40px 40px;
       pointer-events: none;
       z-index: 0;
-    }
-
-    /* Sticky Top Action Bar for Fullscreen Button */
-    .top-bar {
-      width: 100%;
-      max-width: 480px;
-      display: flex;
-      justify-content: flex-end;
-      margin-bottom: 12px;
-      z-index: 10;
-    }
-
-    .fullscreen-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 8px 14px;
-      background: rgba(0, 255, 204, 0.1);
-      border: 1px solid var(--cyan);
-      color: var(--cyan);
-      font-family: 'Share Tech Mono', monospace;
-      font-size: 0.8rem;
-      letter-spacing: 1px;
-      cursor: pointer;
-      text-transform: uppercase;
-      box-shadow: 0 0 10px rgba(0, 255, 204, 0.2);
-      transition: all 0.2s ease;
-    }
-
-    .fullscreen-btn:active {
-      background: rgba(0, 255, 204, 0.3);
-      transform: scale(0.97);
     }
 
     .dossier-card {
@@ -276,13 +242,6 @@
 
   <div class="bg-grid"></div>
 
-  <!-- Permanent top bar with fullscreen button -->
-  <div class="top-bar">
-    <button id="fs-btn" class="fullscreen-btn" onclick="toggleFullScreen()">
-      [ ⛶ FULLSCREEN ]
-    </button>
-  </div>
-
   <div class="dossier-card" id="app">
     <div class="terminal-message">
       <p>INITIALIZING DATA LINK...</p>
@@ -294,36 +253,13 @@
     // -------------------------------------------------------------
     // PASTE YOUR PUBLISHED GOOGLE SHEET CSV URL HERE:
     // -------------------------------------------------------------
-    const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRlmhjhIPa6cbXQecsfKAlLoLilr1NAV2QGqepe_rf9_E3CTB-T-Jlpd1rge93AsT-2CtXoh5spt3qY/pub?gid=0&single=true&output=csv";
+    const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRlmhjhIPa6cbXQecsfKAlLoLilr1NAV2QGqepe_rf9_E3CTB-T-Jlpd1rge93AsT-2CtXoh5spt3qY/pub?output=csv";
 
     const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300' fill='%23111'%3E%3Crect width='100%25' height='100%25'/%3E%3Ctext x='50%25' y='50%25' fill='%2300ffcc' font-family='monospace' font-size='16' text-anchor='middle'%3E%5B IMAGE CORRUPTED / NOT FOUND %5D%3C/text%3E%3C/svg%3E";
 
     function getQueryParam(param) {
       const urlParams = new URLSearchParams(window.location.search);
       return urlParams.get(param);
-    }
-
-    function toggleFullScreen() {
-      const doc = window.document;
-      const docEl = doc.documentElement;
-
-      const requestFullScreen = docEl.requestFullscreen || docEl.webkitRequestFullScreen || docEl.mozRequestFullScreen || docEl.msRequestFullscreen;
-
-      if (!doc.fullscreenElement && !doc.webkitFullscreenElement && !doc.mozFullScreenElement && !doc.msFullscreenElement) {
-        if (requestFullScreen) {
-          requestFullScreen.call(docEl).catch(() => {});
-        } else {
-          // iOS Safari fallback: Scroll down by 1px to auto-collapse the Safari bar
-          window.scrollTo(0, 1);
-        }
-        document.getElementById('fs-btn').innerText = "[ ⛶ EXIT FULLSCREEN ]";
-      } else {
-        const exitFullScreen = doc.exitFullscreen || doc.webkitExitFullscreen || doc.mozCancelFullScreen || doc.msExitFullscreen;
-        if (exitFullScreen) {
-          exitFullScreen.call(doc);
-        }
-        document.getElementById('fs-btn').innerText = "[ ⛶ FULLSCREEN ]";
-      }
     }
 
     function renderError(title, subtitle) {
@@ -340,7 +276,6 @@
     }
 
     function renderDossier(data) {
-      // Find case-insensitive keys
       const keys = Object.keys(data);
       const getKey = (name) => {
         const found = keys.find(k => k.trim().toLowerCase() === name.toLowerCase());
