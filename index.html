@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ARCHIVE // SUBJECT DOSSIER</title>
+  <title>MINISTRY OF REPRODUCTION // UNIT DOSSIER</title>
 
   <!-- PWA & Mobile Viewport Styling -->
   <meta name="theme-color" content="#08090c">
@@ -15,18 +15,20 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@500;800;900&display=swap" rel="stylesheet">
 
-  <!-- PapaParse for robust CSV parsing -->
+  <!-- PapaParse for CSV parsing -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 
   <style>
     :root {
-      --bg-color: #08090c;
-      --card-bg: rgba(14, 18, 24, 0.92);
-      --accent: #ff0055;       /* Warning Red/Pink */
-      --cyan: #00ffcc;         /* HUD Cyan */
+      --bg-color: #07080a;
+      --card-bg: rgba(13, 17, 23, 0.94);
+      --accent-danger: #ff0055;  /* Flag / Area of concern / High Creativity */
+      --cyan: #00ffcc;           /* HUD Cyan */
+      --amber: #ffaa00;          /* Warning indicator */
       --text: #d0d7de;
       --text-muted: #6e7681;
-      --border: rgba(0, 255, 204, 0.3);
+      --border: rgba(0, 255, 204, 0.25);
+      --danger-border: rgba(255, 0, 85, 0.45);
     }
 
     * {
@@ -43,7 +45,7 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      padding: 20px 16px;
+      padding: 24px 16px;
       position: relative;
       overflow-x: hidden;
     }
@@ -65,9 +67,9 @@
       position: fixed;
       top: 0; left: 0; width: 100vw; height: 100vh;
       background-image: 
-        linear-gradient(to right, rgba(0, 255, 204, 0.05) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(0, 255, 204, 0.05) 1px, transparent 1px);
-      background-size: 40px 40px;
+        linear-gradient(to right, rgba(0, 255, 204, 0.04) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(0, 255, 204, 0.04) 1px, transparent 1px);
+      background-size: 35px 35px;
       pointer-events: none;
       z-index: 0;
     }
@@ -76,20 +78,26 @@
       position: relative;
       z-index: 1;
       width: 100%;
-      max-width: 480px;
+      max-width: 520px;
       background: var(--card-bg);
       border: 1px solid var(--border);
-      box-shadow: 0 0 25px rgba(0, 255, 204, 0.15), inset 0 0 15px rgba(0, 0, 0, 0.8);
-      padding: 24px 20px;
-      backdrop-filter: blur(8px);
+      box-shadow: 0 0 30px rgba(0, 255, 204, 0.12), inset 0 0 15px rgba(0, 0, 0, 0.9);
+      padding: 26px 22px;
+      backdrop-filter: blur(10px);
+      transition: border-color 0.3s ease, box-shadow 0.3s ease;
     }
 
-    /* Tech corner accents */
+    .dossier-card.has-hazard {
+      border-color: var(--danger-border);
+      box-shadow: 0 0 35px rgba(255, 0, 85, 0.22), inset 0 0 20px rgba(0, 0, 0, 0.95);
+    }
+
+    /* Corner Framing Brackets */
     .dossier-card::before, .dossier-card::after {
       content: "";
       position: absolute;
-      width: 12px;
-      height: 12px;
+      width: 14px;
+      height: 14px;
       border-color: var(--cyan);
       pointer-events: none;
     }
@@ -104,7 +112,16 @@
       border-right: 3px solid var(--cyan);
     }
 
-    /* Header & Badges */
+    .dossier-card.has-hazard::before {
+      border-top-color: var(--accent-danger);
+      border-left-color: var(--accent-danger);
+    }
+    .dossier-card.has-hazard::after {
+      border-bottom-color: var(--accent-danger);
+      border-right-color: var(--accent-danger);
+    }
+
+    /* System Header */
     .system-header {
       display: flex;
       justify-content: space-between;
@@ -112,93 +129,66 @@
       border-bottom: 1px dashed var(--border);
       padding-bottom: 12px;
       margin-bottom: 20px;
-      font-size: 0.8rem;
+      font-size: 0.75rem;
       letter-spacing: 1px;
       color: var(--cyan);
     }
 
     .status-badge {
-      background: rgba(255, 0, 85, 0.15);
-      border: 1px solid var(--accent);
-      color: var(--accent);
+      background: rgba(0, 255, 204, 0.1);
+      border: 1px solid var(--cyan);
+      color: var(--cyan);
       padding: 2px 8px;
-      font-size: 0.75rem;
+      font-size: 0.7rem;
       text-transform: uppercase;
       letter-spacing: 1.5px;
-      animation: pulse 2s infinite;
     }
 
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.5; }
+    .status-badge.hazard {
+      background: rgba(255, 0, 85, 0.2);
+      border-color: var(--accent-danger);
+      color: var(--accent-danger);
+      animation: alertPulse 1.5s infinite;
     }
 
-    /* Profile Image Box */
-    .photo-frame {
-      width: 100%;
-      height: 260px;
-      background: #000;
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      position: relative;
+    @keyframes alertPulse {
+      0%, 100% { opacity: 1; box-shadow: 0 0 8px rgba(255, 0, 85, 0.6); }
+      50% { opacity: 0.4; box-shadow: none; }
+    }
+
+    /* Unit Identity Info */
+    .unit-meta {
       margin-bottom: 20px;
-      overflow: hidden;
-      display: flex;
-      align-items: center;
-      justify-content: center;
     }
 
-    .photo-frame img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      filter: grayscale(80%) contrast(120%) brightness(90%);
-    }
-
-    .photo-frame .reticle {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      font-size: 0.7rem;
-      color: var(--cyan);
-      opacity: 0.7;
-    }
-
-    /* Identity & Details */
-    .character-name {
+    .unit-identity {
       font-family: 'Orbitron', sans-serif;
-      font-size: 1.8rem;
-      font-weight: 800;
+      font-size: 1.7rem;
+      font-weight: 900;
       text-transform: uppercase;
       letter-spacing: 2px;
       color: #fff;
-      text-shadow: 0 0 10px rgba(0, 255, 204, 0.4);
+      text-shadow: 0 0 12px rgba(0, 255, 204, 0.35);
       margin-bottom: 6px;
     }
 
-    .character-role {
-      font-size: 1.05rem;
-      color: var(--cyan);
-      margin-bottom: 16px;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-    }
-
-    .meta-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      background: rgba(0, 0, 0, 0.4);
-      padding: 12px;
-      border-left: 2px solid var(--accent);
-      margin-bottom: 20px;
+    .meta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px 24px;
+      margin-top: 8px;
+      background: rgba(0, 0, 0, 0.45);
+      padding: 10px 12px;
+      border-left: 3px solid var(--cyan);
       font-size: 0.85rem;
     }
 
     .meta-item span {
       display: block;
       color: var(--text-muted);
-      font-size: 0.7rem;
+      font-size: 0.68rem;
       text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
 
     .meta-item strong {
@@ -206,24 +196,142 @@
       font-weight: normal;
     }
 
-    /* Bio Narrative */
-    .bio-container {
-      font-size: 0.95rem;
-      line-height: 1.6;
-      color: #c4cdd5;
-      text-align: justify;
-      background: rgba(0, 0, 0, 0.2);
-      padding: 14px;
+    /* Aptitude Metrics List */
+    .section-title {
+      font-size: 0.75rem;
+      color: var(--cyan);
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+      margin-top: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .section-title::after {
+      content: "";
+      flex: 1;
+      height: 1px;
+      background: rgba(0, 255, 204, 0.15);
+    }
+
+    .stat-list {
+      display: grid;
+      gap: 8px;
+      background: rgba(0, 0, 0, 0.35);
+      padding: 12px;
       border: 1px solid rgba(255, 255, 255, 0.05);
     }
 
-    .bio-container::first-letter {
-      font-size: 1.4rem;
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.82rem;
+      border-bottom: 1px dotted rgba(255, 255, 255, 0.08);
+      padding-bottom: 5px;
+    }
+
+    .stat-row:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .stat-label {
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* Star Visuals */
+    .star-display {
+      letter-spacing: 3px;
+      font-size: 0.95rem;
+      white-space: nowrap;
+    }
+
+    .star-filled {
       color: var(--cyan);
+      text-shadow: 0 0 6px rgba(0, 255, 204, 0.5);
+    }
+
+    .star-empty {
+      color: rgba(255, 255, 255, 0.15);
+    }
+
+    /* Danger Star Override for Creativity */
+    .stat-row.creativity-alert {
+      background: rgba(255, 0, 85, 0.12);
+      border-left: 3px solid var(--accent-danger);
+      padding: 6px 8px;
+      margin: 2px -4px;
+    }
+
+    .stat-row.creativity-alert .stat-label {
+      color: #ff85a1;
       font-weight: bold;
     }
 
-    /* System Status Messages */
+    .stat-row.creativity-alert .star-filled {
+      color: var(--accent-danger);
+      text-shadow: 0 0 8px rgba(255, 0, 85, 0.8);
+    }
+
+    .stat-row.creativity-alert .warning-tag {
+      color: var(--accent-danger);
+      font-size: 0.7rem;
+      margin-left: 6px;
+      font-weight: bold;
+      letter-spacing: 1px;
+    }
+
+    /* Behavioral / Appraisal Notes */
+    .alert-panel {
+      margin-top: 14px;
+      padding: 12px;
+      background: rgba(0, 0, 0, 0.4);
+      border-left: 3px solid var(--amber);
+      font-size: 0.85rem;
+    }
+
+    .alert-panel.danger {
+      border-left-color: var(--accent-danger);
+      background: rgba(255, 0, 85, 0.05);
+    }
+
+    .alert-panel.hazard-flag {
+      border-left-color: var(--accent-danger);
+      background: rgba(255, 0, 85, 0.12);
+      border: 1px solid var(--accent-danger);
+      border-left: 4px solid var(--accent-danger);
+      animation: alertPulse 3s infinite;
+    }
+
+    .alert-panel .label {
+      display: block;
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 4px;
+    }
+
+    .alert-panel.danger .label,
+    .alert-panel.hazard-flag .label {
+      color: var(--accent-danger);
+      font-weight: bold;
+    }
+
+    .alert-panel.amber .label {
+      color: var(--amber);
+    }
+
+    .alert-panel p {
+      line-height: 1.5;
+      color: #c9d1d9;
+    }
+
+    /* Terminal Status Messages */
     .terminal-message {
       text-align: center;
       padding: 40px 10px;
@@ -231,7 +339,7 @@
     }
 
     .terminal-message .glitch-alert {
-      color: var(--accent);
+      color: var(--accent-danger);
       font-size: 1.2rem;
       margin-bottom: 10px;
       font-family: 'Orbitron', sans-serif;
@@ -255,18 +363,31 @@
     // -------------------------------------------------------------
     const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRlmhjhIPa6cbXQecsfKAlLoLilr1NAV2QGqepe_rf9_E3CTB-T-Jlpd1rge93AsT-2CtXoh5spt3qY/pub?output=csv";
 
-    const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300' fill='%23111'%3E%3Crect width='100%25' height='100%25'/%3E%3Ctext x='50%25' y='50%25' fill='%2300ffcc' font-family='monospace' font-size='16' text-anchor='middle'%3E%5B IMAGE CORRUPTED / NOT FOUND %5D%3C/text%3E%3C/svg%3E";
+    // Set the max star scale (5 or 10 based on your scoring system)
+    const MAX_STARS = 5;
 
     function getQueryParam(param) {
       const urlParams = new URLSearchParams(window.location.search);
       return urlParams.get(param);
     }
 
+    // Convert numeric score into filled and empty stars
+    function formatStars(scoreRaw, maxStars = MAX_STARS) {
+      const score = parseInt(scoreRaw, 10);
+      if (isNaN(score) || score <= 0) {
+        return `<span class="star-display"><span class="star-empty">${'☆'.repeat(maxStars)}</span></span>`;
+      }
+      const clamped = Math.min(Math.max(score, 0), maxStars);
+      const filled = '★'.repeat(clamped);
+      const empty = '☆'.repeat(maxStars - clamped);
+      return `<span class="star-display"><span class="star-filled">${filled}</span><span class="star-empty">${empty}</span></span>`;
+    }
+
     function renderError(title, subtitle) {
       document.getElementById('app').innerHTML = `
         <div class="system-header">
           <span>SYS.ERR // 404</span>
-          <span class="status-badge">ERROR</span>
+          <span class="status-badge hazard">ERROR</span>
         </div>
         <div class="terminal-message">
           <div class="glitch-alert">${title}</div>
@@ -277,54 +398,124 @@
 
     function renderDossier(data) {
       const keys = Object.keys(data);
-      const getKey = (name) => {
-        const found = keys.find(k => k.trim().toLowerCase() === name.toLowerCase());
-        return found ? data[found] : '';
+      const getVal = (name) => {
+        // Tolerates subtle space or underscore variations in header spelling
+        const normalizedTarget = name.replace(/[\s_]+/g, '').toLowerCase();
+        const found = keys.find(k => k.replace(/[\s_]+/g, '').toLowerCase() === normalizedTarget);
+        return found && data[found] ? data[found].trim() : '---';
       };
 
-      const name = getKey('name');
-      const role = getKey('role');
-      const actor = getKey('actor');
-      const faction = getKey('faction');
-      const bio = getKey('bio');
-      const photo = getKey('photo');
+      // Extracted fields
+      const idNum = getVal('id_number');
+      const identity = getVal('identity');
+      const prodDate = getVal('date_of_production');
+      const mathSci = getVal('mathematics_scientific_ability');
+      const linguistic = getVal('linguistic_ability');
+      const discipline = getVal('discipline_obedience');
+      const physical = getVal('physical_skill');
+      const conformity = getVal('social_conformity');
+      const intelligence = getVal('overall_intelligence');
+      const creativity = getVal('creativity_individuality');
+      const notableTrait = getVal('notable_trait');
+      const areaConcern = getVal('area_of_concern');
 
-      document.getElementById('app').innerHTML = `
+      // Threat condition: 3+ out of 5 stars (or 6+ out of 10)
+      const creativityScore = parseInt(creativity, 10) || 0;
+      const isSubversive = (MAX_STARS === 5 && creativityScore >= 3) || (MAX_STARS === 10 && creativityScore >= 6);
+
+      const appContainer = document.getElementById('app');
+      if (isSubversive) {
+        appContainer.classList.add('has-hazard');
+      } else {
+        appContainer.classList.remove('has-hazard');
+      }
+
+      appContainer.innerHTML = `
         <div class="system-header">
-          <span>ARCHIVE REGISTRY // SECTOR 07</span>
-          <span class="status-badge">CLASSIFIED</span>
+          <span>MINISTRY OF REPRODUCTION // REGISTRY</span>
+          <span class="status-badge ${isSubversive ? 'hazard' : ''}">
+            ${isSubversive ? '⚠ SUBVERSIVE HAZARD' : 'STANDARD MONITORED'}
+          </span>
         </div>
 
-        <div class="photo-frame">
-          <div class="reticle">REC ● [TARGET ACQUIRED]</div>
-          <img src="${photo && photo.trim() !== '' ? photo : DEFAULT_AVATAR}" alt="${name}" onerror="this.src='${DEFAULT_AVATAR}'">
-        </div>
-
-        <h1 class="character-name">${name || 'UNKNOWN SUBJECT'}</h1>
-        <div class="character-role">${role || 'ROLE UNASSIGNED'}</div>
-
-        <div class="meta-grid">
-          <div class="meta-item">
-            <span>PERFORMED BY</span>
-            <strong>${actor || 'ANONYMOUS'}</strong>
-          </div>
-          <div class="meta-item">
-            <span>FACTION / STATUS</span>
-            <strong>${faction || 'CIVILIAN'}</strong>
+        <div class="unit-meta">
+          <div class="unit-identity">${identity !== '---' ? identity : 'DESIGNATION UNASSIGNED'}</div>
+          
+          <div class="meta-row">
+            <div class="meta-item">
+              <span>UNIT ID NUMBER</span>
+              <strong>${idNum}</strong>
+            </div>
+            <div class="meta-item">
+              <span>PRODUCTION DATE</span>
+              <strong>${prodDate}</strong>
+            </div>
           </div>
         </div>
 
-        <div class="bio-container">
-          ${bio || 'Record corrupted or redacted by administrative order.'}
+        <div class="section-title">PSYCH-APTITUDE METRICS</div>
+        <div class="stat-list">
+          <div class="stat-row">
+            <span class="stat-label">Overall Intelligence</span>
+            ${formatStars(intelligence)}
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Discipline / Obedience</span>
+            ${formatStars(discipline)}
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Social Conformity</span>
+            ${formatStars(conformity)}
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Math & Scientific Ability</span>
+            ${formatStars(mathSci)}
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Linguistic Ability</span>
+            ${formatStars(linguistic)}
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Physical Skill</span>
+            ${formatStars(physical)}
+          </div>
+          
+          <!-- Creativity & Individuality Metric Row -->
+          <div class="stat-row ${isSubversive ? 'creativity-alert' : ''}">
+            <span class="stat-label">Creativity / Individuality</span>
+            <div>
+              ${formatStars(creativity)}
+              ${isSubversive ? '<span class="warning-tag">[FLAGGED]</span>' : ''}
+            </div>
+          </div>
+        </div>
+
+        <div class="section-title">BEHAVIORAL APPRAISAL</div>
+
+        ${isSubversive ? `
+          <div class="alert-panel hazard-flag">
+            <span class="label">CRITICAL RECONDITIONING ADVISORY</span>
+            <p><strong>ALERT:</strong> Unit exhibits heightened creativity and individualist thought patterns (${creativityScore}/${MAX_STARS} stars). Severe non-conformity threat. Recommend immediate cognitive realignment.</p>
+          </div>
+        ` : ''}
+
+        <div class="alert-panel amber">
+          <span class="label">NOTABLE TRAIT // RECORDED SPECIFICATION</span>
+          <p>${notableTrait}</p>
+        </div>
+
+        <div class="alert-panel danger">
+          <span class="label">AREA OF CONCERN // DEVIATION RISK</span>
+          <p>${areaConcern}</p>
         </div>
       `;
     }
 
     async function loadCastData() {
-      const targetId = getQueryParam('id');
+      const targetId = getQueryParam('id') || getQueryParam('id_number');
 
       if (!targetId) {
-        renderError("SCAN CODE REQUIRED", "No citizen ID detected. Please scan an authorized personnel tag.");
+        renderError("SCAN TAG REQUIRED", "No personnel identification code detected. Please scan an authorized unit tag.");
         return;
       }
 
@@ -340,8 +531,12 @@
           const records = results.data;
           const cleanTarget = decodeURIComponent(targetId).trim().toLowerCase();
 
+          // Match 'id_number' (or 'id' as fallback)
           const matched = records.find(row => {
-            const idKey = Object.keys(row).find(k => k.trim().toLowerCase() === 'id');
+            const idKey = Object.keys(row).find(k => {
+              const cleanedKey = k.replace(/[\s_]+/g, '').toLowerCase();
+              return cleanedKey === 'idnumber' || cleanedKey === 'id';
+            });
             if (!idKey || row[idKey] === undefined || row[idKey] === null) return false;
             return row[idKey].toString().trim().toLowerCase() === cleanTarget;
           });
@@ -349,8 +544,8 @@
           if (matched) {
             renderDossier(matched);
           } else {
-            console.warn("Parsed Records:", records);
-            renderError("SUBJECT NOT FOUND", `ID [${targetId}] does not exist in central surveillance records.`);
+            console.warn("Parsed records from sheet:", records);
+            renderError("SUBJECT NOT FOUND", `Unit ID [${targetId}] does not exist in production archives.`);
           }
         },
         error: function(err) {
