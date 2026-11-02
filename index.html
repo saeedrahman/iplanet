@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Passport Page Test Layout</title>
+    <!-- Tailwind CSS for styling -->
+    <script src="https://tailwindcss.com"></script>
+    <style>
+        @import url('https://googleapis.com');
+        
+        /* Security Fine-line Pattern Simulation */
+        .passport-bg {
+            background-color: #f1ebd9;
+            background-image: radial-gradient(rgba(174, 153, 114, 0.15) 1px, transparent 0), radial-gradient(rgba(174, 153, 114, 0.15) 1px, transparent 0);
+            background-size: 8px 8px;
+            background-position: 0 0, 4px 4px;
+        }
+        /* Machine Readable Zone (MRZ) font style */
+        .font-mrz {
+            font-family: 'Share Tech Mono', 'Courier New', monospace;
+            letter-spacing: 0.15em;
+        }
+    </style>
+</head>
+<body class="bg-stone-900 min-h-screen flex items-center justify-center p-4 antialiased font-['Inter']">
+
+    <main class="w-full max-w-xl">
+        <!-- Passport Page Container -->
+        <article class="passport-bg shadow-2xl rounded-xl border-4 border-amber-700/30 overflow-hidden relative text-stone-800">
+            
+            <!-- Passport Header Ribbon -->
+            <header class="bg-emerald-900 text-amber-100 p-4 flex justify-between items-center border-b border-amber-600/40">
+                <div>
+                    <h2 class="text-xs font-bold tracking-widest uppercase text-amber-400/90">PASSPORT / PASSEPORT</h2>
+                    <h1 class="text-sm font-semibold tracking-wide">DIGITAL DATABASE SYSTEM</h1>
+                </div>
+                <!-- Mock Official Crest Placeholder -->
+                <div class="w-8 h-8 rounded-full border border-amber-400/40 flex items-center justify-center text-xs font-bold text-amber-400">
+                    ★
+                </div>
+            </header>
+
+            <!-- Passport Bio Layout Grid -->
+            <div class="p-6 grid grid-cols-12 gap-5">
+                
+                <!-- Left Column: Passport Photo Slot -->
+                <div class="col-span-4 flex flex-col items-center">
+                    <div class="w-full aspect-[3/4] bg-stone-300 border-2 border-stone-400 rounded shadow-inner flex items-center justify-center relative overflow-hidden">
+                        <!-- Silhouette Placeholder (Simulates a real cropped ID photo) -->
+                        <svg class="w-16 h-16 text-stone-400 mt-4" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z"/>
+                        </svg>
+                        <!-- Digital watermark design layer -->
+                        <div class="absolute inset-0 bg-gradient-to-tr from-amber-500/10 to-transparent pointer-events-none mix-blend-overlay"></div>
+                    </div>
+                    <span class="text-[10px] font-mono tracking-widest text-stone-500/80 mt-2 font-bold uppercase">Digital ID Photo</span>
+                </div>
+
+                <!-- Right Column: Hardcoded Sample Data Fields -->
+                <div class="col-span-8 grid grid-cols-2 gap-x-4 gap-y-3 text-xs border-l border-stone-400/30 pl-4">
+                    
+                    <!-- Full Width Field: Surname / Name -->
+                    <div class="col-span-2">
+                        <label class="block text-[10px] font-semibold text-stone-500 uppercase tracking-tight">Surname / Nom (Title)</label>
+                        <span class="text-base font-bold uppercase tracking-wide block text-stone-900">SAMPLE RECORD</span>
+                    </div>
+
+                    <!-- Column Field: ID -->
+                    <div>
+                        <label class="block text-[10px] font-semibold text-stone-500 uppercase tracking-tight">Passport No. / N° du passeport</label>
+                        <span class="font-mono text-sm font-bold text-red-700 tracking-wide block">XF-902-SAMPLE</span>
+                    </div>
+
+                    <!-- Column Field: Status -->
+                    <div>
+                        <label class="block text-[10px] font-semibold text-stone-500 uppercase tracking-tight">Status / National Code</label>
+                        <span class="text-sm font-semibold text-stone-800 uppercase block">ACTIVE TEST</span>
+                    </div>
+
+                    <!-- Full Width Field: Description -->
+                    <div class="col-span-2 mt-1">
+                        <label class="block text-[10px] font-semibold text-stone-500 uppercase tracking-tight">Endorsements / Observations</label>
+                        <p class="text-stone-700 leading-relaxed text-[11px] font-medium bg-stone-100/40 p-2 rounded border border-stone-300/40 min-h-[60px]">
+                            This file is a localized template test framework running directly on GitHub Pages. No external spreadsheet integrations or live API connections are deployed in this current instance.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Machine Readable Zone (MRZ) - Classic Passport Bottom Typography -->
+            <footer class="bg-stone-100/60 border-t-2 border-dashed border-stone-400/40 p-4 font-mrz text-stone-700 text-sm leading-tight break-all uppercase select-all">
+                <div>P&lt;SYS&lt;SAMPLE&lt;RECORD&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;</div>
+                <div>XF902SAMPLE&lt;0XXX000000M0000000&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;00</div>
+            </footer>
+
+        </article>
+    </main>
+
+</body>
+</html>
