@@ -10,10 +10,10 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
-  <!-- Retro terminal fonts -->
+  <!-- Legible Dystopian Fonts: Chakra Petch (Headings) & Space Grotesk (Body) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600;700&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
 
   <!-- PapaParse for CSV parsing -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
@@ -21,14 +21,14 @@
   <style>
     :root {
       --bg-color: #07080a;
-      --card-bg: rgba(13, 17, 23, 0.94);
+      --card-bg: rgba(13, 17, 23, 0.95);
       --accent-danger: #ff0055;  /* Flag / Area of concern / High Creativity */
       --cyan: #00ffcc;           /* HUD Cyan */
       --amber: #ffaa00;          /* Warning indicator */
-      --text: #d0d7de;
-      --text-muted: #6e7681;
+      --text: #e6edf3;
+      --text-muted: #8b949e;      /* Brighter, readable muted tone */
       --border: rgba(0, 255, 204, 0.25);
-      --danger-border: rgba(255, 0, 85, 0.45);
+      --danger-border: rgba(255, 0, 85, 0.5);
     }
 
     * {
@@ -41,7 +41,6 @@
       background-color: var(--bg-color);
       color: var(--text);
       font-family: 'Space Grotesk', -apple-system, sans-serif;
-      letter-spacing: 0.3px;
       min-height: 100vh;
       display: flex;
       justify-content: center;
@@ -49,15 +48,16 @@
       padding: 24px 16px;
       position: relative;
       overflow-x: hidden;
+      letter-spacing: 0.2px;
     }
 
-    /* CRT Scanline & Grain Overlay */
+    /* Subtler CRT Scanline & Grain Overlay */
     body::before {
       content: " ";
       position: fixed;
       top: 0; left: 0; bottom: 0; right: 0;
-      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.45) 50%), 
-                  linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.18) 50%), 
+                  linear-gradient(90deg, rgba(255, 0, 0, 0.02), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.02));
       background-size: 100% 3px, 3px 100%;
       pointer-events: none;
       z-index: 100;
@@ -129,20 +129,22 @@
       align-items: center;
       border-bottom: 1px dashed var(--border);
       padding-bottom: 12px;
-      margin-bottom: 20px;
+      margin-bottom: 18px;
       font-size: 0.75rem;
       letter-spacing: 1px;
       color: var(--cyan);
+      font-family: 'Chakra Petch', sans-serif;
     }
 
     .status-badge {
       background: rgba(0, 255, 204, 0.1);
       border: 1px solid var(--cyan);
       color: var(--cyan);
-      padding: 2px 8px;
-      font-size: 0.7rem;
+      padding: 3px 8px;
+      font-size: 0.72rem;
       text-transform: uppercase;
-      letter-spacing: 1.5px;
+      letter-spacing: 1.2px;
+      font-weight: 600;
     }
 
     .status-badge.hazard {
@@ -157,6 +159,62 @@
       50% { opacity: 0.4; box-shadow: none; }
     }
 
+    /* Character Photo Box */
+    .surveillance-photo-frame {
+      width: 100%;
+      height: 250px;
+      background: #000;
+      border: 1px solid rgba(0, 255, 204, 0.3);
+      position: relative;
+      margin-bottom: 20px;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .surveillance-photo-frame img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      filter: grayscale(70%) contrast(115%) brightness(92%);
+    }
+
+    .surveillance-photo-frame .reticle-top {
+      position: absolute;
+      top: 8px;
+      left: 10px;
+      font-family: 'Chakra Petch', sans-serif;
+      font-size: 0.68rem;
+      color: var(--cyan);
+      letter-spacing: 1px;
+      background: rgba(0, 0, 0, 0.7);
+      padding: 2px 6px;
+      border: 1px solid rgba(0, 255, 204, 0.2);
+    }
+
+    .surveillance-photo-frame .reticle-bottom {
+      position: absolute;
+      bottom: 8px;
+      right: 10px;
+      font-family: 'Chakra Petch', sans-serif;
+      font-size: 0.68rem;
+      color: var(--cyan);
+      letter-spacing: 1px;
+      background: rgba(0, 0, 0, 0.7);
+      padding: 2px 6px;
+      border: 1px solid rgba(0, 255, 204, 0.2);
+    }
+
+    .has-hazard .surveillance-photo-frame {
+      border-color: rgba(255, 0, 85, 0.5);
+    }
+
+    .has-hazard .surveillance-photo-frame .reticle-top {
+      color: var(--accent-danger);
+      border-color: rgba(255, 0, 85, 0.4);
+    }
+
     /* Unit Identity Info */
     .unit-meta {
       margin-bottom: 20px;
@@ -164,10 +222,10 @@
 
     .unit-identity {
       font-family: 'Chakra Petch', sans-serif;
-      letter-spacing: 1.5px;
-      font-size: 1.7rem;
-      font-weight: 900;
+      font-size: 1.85rem;
+      font-weight: 700;
       text-transform: uppercase;
+      letter-spacing: 1.5px;
       color: #fff;
       text-shadow: 0 0 12px rgba(0, 255, 204, 0.35);
       margin-bottom: 6px;
@@ -179,35 +237,42 @@
       gap: 12px 24px;
       margin-top: 8px;
       background: rgba(0, 0, 0, 0.45);
-      padding: 10px 12px;
+      padding: 10px 14px;
       border-left: 3px solid var(--cyan);
-      font-size: 0.85rem;
+      font-size: 0.9rem;
+    }
+
+    .has-hazard .meta-row {
+      border-left-color: var(--accent-danger);
     }
 
     .meta-item span {
       display: block;
       color: var(--text-muted);
-      font-size: 0.68rem;
+      font-size: 0.72rem;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.8px;
+      font-weight: 600;
     }
 
     .meta-item strong {
       color: #fff;
-      font-weight: normal;
+      font-weight: 600;
     }
 
     /* Aptitude Metrics List */
     .section-title {
-      font-size: 0.75rem;
+      font-family: 'Chakra Petch', sans-serif;
+      font-size: 0.8rem;
       color: var(--cyan);
-      letter-spacing: 1.5px;
+      letter-spacing: 1.2px;
       text-transform: uppercase;
       margin-bottom: 10px;
       margin-top: 20px;
       display: flex;
       align-items: center;
       gap: 8px;
+      font-weight: 700;
     }
 
     .section-title::after {
@@ -219,9 +284,9 @@
 
     .stat-list {
       display: grid;
-      gap: 8px;
+      gap: 9px;
       background: rgba(0, 0, 0, 0.35);
-      padding: 12px;
+      padding: 14px;
       border: 1px solid rgba(255, 255, 255, 0.05);
     }
 
@@ -229,9 +294,9 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      font-size: 0.82rem;
-      border-bottom: 1px dotted rgba(255, 255, 255, 0.08);
-      padding-bottom: 5px;
+      font-size: 0.9rem;
+      border-bottom: 1px dotted rgba(255, 255, 255, 0.1);
+      padding-bottom: 6px;
       gap: 8px;
     }
 
@@ -241,16 +306,15 @@
     }
 
     .stat-label {
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      font-size: 0.78rem;
+      color: #c9d1d9;
+      letter-spacing: 0.2px;
+      font-weight: 500;
     }
 
-    /* Star Visuals (Optimized for 10 stars) */
+    /* Star Visuals (10 stars) */
     .star-display {
-      letter-spacing: 1.5px;
-      font-size: 0.75rem;
+      letter-spacing: 2px;
+      font-size: 0.85rem;
       white-space: nowrap;
       display: inline-flex;
       align-items: center;
@@ -258,24 +322,24 @@
 
     .star-filled {
       color: var(--cyan);
-      text-shadow: 0 0 5px rgba(0, 255, 204, 0.6);
+      text-shadow: 0 0 6px rgba(0, 255, 204, 0.6);
     }
 
     .star-empty {
-      color: rgba(255, 255, 255, 0.12);
+      color: rgba(255, 255, 255, 0.15);
     }
 
     /* Danger Star Override for Creativity */
     .stat-row.creativity-alert {
-      background: rgba(255, 0, 85, 0.12);
+      background: rgba(255, 0, 85, 0.14);
       border-left: 3px solid var(--accent-danger);
-      padding: 6px 8px;
-      margin: 2px -4px;
+      padding: 8px 10px;
+      margin: 2px -6px;
     }
 
     .stat-row.creativity-alert .stat-label {
-      color: #ff85a1;
-      font-weight: bold;
+      color: #ff94af;
+      font-weight: 700;
     }
 
     .stat-row.creativity-alert .star-filled {
@@ -285,19 +349,20 @@
 
     .stat-row.creativity-alert .warning-tag {
       color: var(--accent-danger);
-      font-size: 0.65rem;
-      margin-left: 4px;
-      font-weight: bold;
-      letter-spacing: 0.5px;
+      font-size: 0.72rem;
+      margin-left: 6px;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      font-family: 'Chakra Petch', sans-serif;
     }
 
     /* Behavioral / Appraisal Notes */
     .alert-panel {
       margin-top: 14px;
-      padding: 12px;
+      padding: 14px;
       background: rgba(0, 0, 0, 0.4);
       border-left: 3px solid var(--amber);
-      font-size: 0.85rem;
+      font-size: 0.92rem;
     }
 
     .alert-panel.danger {
@@ -315,16 +380,17 @@
 
     .alert-panel .label {
       display: block;
-      font-size: 0.68rem;
+      font-family: 'Chakra Petch', sans-serif;
+      font-size: 0.75rem;
       text-transform: uppercase;
       letter-spacing: 1px;
-      margin-bottom: 4px;
+      margin-bottom: 6px;
+      font-weight: 700;
     }
 
     .alert-panel.danger .label,
     .alert-panel.hazard-flag .label {
       color: var(--accent-danger);
-      font-weight: bold;
     }
 
     .alert-panel.amber .label {
@@ -332,8 +398,8 @@
     }
 
     .alert-panel p {
-      line-height: 1.5;
-      color: #c9d1d9;
+      line-height: 1.55;
+      color: #e6edf3;
     }
 
     /* Terminal Status Messages */
@@ -341,13 +407,14 @@
       text-align: center;
       padding: 40px 10px;
       color: var(--cyan);
+      font-family: 'Chakra Petch', sans-serif;
     }
 
     .terminal-message .glitch-alert {
       color: var(--accent-danger);
-      font-size: 1.2rem;
+      font-size: 1.3rem;
       margin-bottom: 10px;
-      font-family: 'Orbitron', sans-serif;
+      font-weight: 700;
     }
   </style>
 </head>
@@ -358,7 +425,7 @@
   <div class="dossier-card" id="app">
     <div class="terminal-message">
       <p>INITIALIZING DATA LINK...</p>
-      <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 8px;">DECRYPTING CITIZEN REGISTRY</p>
+      <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 8px;">DECRYPTING CITIZEN REGISTRY</p>
     </div>
   </div>
 
@@ -368,20 +435,21 @@
     // -------------------------------------------------------------
     const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRlmhjhIPa6cbXQecsfKAlLoLilr1NAV2QGqepe_rf9_E3CTB-T-Jlpd1rge93AsT-2CtXoh5spt3qY/pub?output=csv";
 
-    // Star rating scale
+    // 10-star rating scale
     const MAX_STARS = 10;
+
+    // SVG placeholder if image link is blank, corrupted, or 404s
+    const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='500' height='300' fill='%2308090c'%3E%3Crect width='100%25' height='100%25' fill='%2308090c'/%3E%3Cline x1='0' y1='0' x2='500' y2='300' stroke='%23161b22' stroke-width='1.5'/%3E%3Cline x1='0' y1='300' x2='500' y2='0' stroke='%23161b22' stroke-width='1.5'/%3E%3Ctext x='50%25' y='46%25' fill='%2300ffcc' font-family='monospace' font-size='14' letter-spacing='2' text-anchor='middle'%3E%5B SUBJECT VISUAL UNAVAILABLE %5D%3C/text%3E%3Ctext x='50%25' y='56%25' fill='%236e7681' font-family='monospace' font-size='11' letter-spacing='1' text-anchor='middle'%3ECAMERA LINK OFFLINE // SENSOR CORRUPTED%3C/text%3E%3C/svg%3E";
 
     function getQueryParam(param) {
       const urlParams = new URLSearchParams(window.location.search);
       return urlParams.get(param);
     }
 
-    // Convert numeric score into filled and empty stars out of 10
     function formatStars(scoreRaw, maxStars = MAX_STARS) {
       if (scoreRaw === undefined || scoreRaw === null) {
         return `<span class="star-display"><span class="star-empty">${'☆'.repeat(maxStars)}</span></span>`;
       }
-      // Extract number even if formatted like "7/10" or "8 "
       const numMatch = scoreRaw.toString().match(/\d+/);
       const score = numMatch ? parseInt(numMatch[0], 10) : NaN;
 
@@ -402,7 +470,7 @@
         </div>
         <div class="terminal-message">
           <div class="glitch-alert">${title}</div>
-          <p style="font-size: 0.85rem; color: var(--text-muted);">${subtitle}</p>
+          <p style="font-size: 0.9rem; color: var(--text-muted);">${subtitle}</p>
         </div>
       `;
     }
@@ -410,7 +478,6 @@
     function renderDossier(data) {
       const keys = Object.keys(data);
 
-      // Robust fuzzy search that strips underscores, spaces, hyphens and special chars
       const getVal = (possibleNames) => {
         const names = Array.isArray(possibleNames) ? possibleNames : [possibleNames];
         for (const name of names) {
@@ -423,8 +490,7 @@
         return '---';
       };
 
-      // Extracted fields with synonyms to prevent sheet formatting mismatches
-      const id = getVal(['id', 'idnumber']);
+      const idNum = getVal(['id_number', 'idnumber', 'id']);
       const identity = getVal(['identity', 'name', 'unit']);
       const prodDate = getVal(['date_of_production', 'production_date', 'date']);
       const mathSci = getVal(['mathematics_scientific_ability', 'mathematics', 'math', 'scientific']);
@@ -436,8 +502,11 @@
       const creativity = getVal(['creativity_individuality', 'creativity', 'individuality']);
       const notableTrait = getVal(['notable_trait', 'trait']);
       const areaConcern = getVal(['area_of_concern', 'concern']);
+      
+      // Image URL column lookup
+      const imageUrl = getVal(['image', 'photo', 'picture', 'character_image', 'headshot']);
 
-      // Threat condition: 6 or more stars out of 10
+      // Hazard triggered when creativity >= 6 stars out of 10
       const creativityMatch = creativity.match(/\d+/);
       const creativityScore = creativityMatch ? parseInt(creativityMatch[0], 10) : 0;
       const isSubversive = creativityScore >= 6;
@@ -455,6 +524,13 @@
           <span class="status-badge ${isSubversive ? 'hazard' : ''}">
             ${isSubversive ? '⚠ SUBVERSIVE HAZARD' : 'STANDARD MONITORED'}
           </span>
+        </div>
+
+        <!-- Surveillance Image Frame -->
+        <div class="surveillance-photo-frame">
+          <div class="reticle-top">REC ● [TARGET LOCK: ${idNum !== '---' ? idNum : 'SUBJECT'}]</div>
+          <img src="${imageUrl !== '---' ? imageUrl : DEFAULT_AVATAR}" alt="${identity}" onerror="this.src='${DEFAULT_AVATAR}'">
+          <div class="reticle-bottom">OPTIC // CAM_FEED_07</div>
         </div>
 
         <div class="unit-meta">
@@ -499,7 +575,6 @@
             ${formatStars(physical)}
           </div>
           
-          <!-- Creativity & Individuality Metric Row -->
           <div class="stat-row ${isSubversive ? 'creativity-alert' : ''}">
             <span class="stat-label">Creativity / Individuality</span>
             <div>
@@ -531,7 +606,7 @@
     }
 
     async function loadCastData() {
-      const targetId = getQueryParam('id') || getQueryParam('id');
+      const targetId = getQueryParam('id') || getQueryParam('id_number');
 
       if (!targetId) {
         renderError("SCAN TAG REQUIRED", "No personnel identification code detected. Please scan an authorized unit tag.");
@@ -549,7 +624,6 @@
           const records = results.data;
           const cleanTarget = decodeURIComponent(targetId).trim().toLowerCase();
 
-          // Match 'id_number' or 'id'
           const matched = records.find(row => {
             const idKey = Object.keys(row).find(k => {
               const cleanedKey = k.replace(/[^a-z0-9]/g, '').toLowerCase();
