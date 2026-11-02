@@ -3,163 +3,216 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Off-World Identity Terminal</title>
-    <!-- Tailwind CSS for modern layout architecture -->
-    <script src="https://tailwindcss.com"></script>
+    <title>Google Sheets API Test Sandbox</title>
     <style>
-        @import url('https://googleapis.com');
-        
         body {
-            background-color: #0b0f14;
-            /* Subtly animated scanline / grid texture to look like an active terminal screen */
-            background-image: 
-                linear-gradient(rgba(18, 24, 32, 0.8) 50%, transparent 50%),
-                linear-gradient(90deg, rgba(30, 41, 59, 0.1) 1px, transparent 1px),
-                linear-gradient(rgba(30, 41, 59, 0.1) 1px, transparent 1px);
-            background-size: 100% 4px, 20px 20px, 20px 20px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 0 20px;
+            background-color: #f8f9fa;
+            color: #333;
         }
-
-        .font-display { font-family: 'Orbitron', sans-serif; }
-        .font-mono-tech { font-family: 'JetBrains Mono', monospace; }
-
-        /* Cyberpunk glassmorphism effect */
-        .cyber-panel {
-            background: linear-gradient(135deg, rgba(15, 23, 42, 0.6) 0%, rgba(30, 41, 59, 0.4) 100%);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
         }
-
-        /* Neon tech border glows */
-        .neon-border-blue {
-            box-shadow: 0 0 15px rgba(56, 189, 248, 0.15), inset 0 0 15px rgba(56, 189, 248, 0.05);
+        .form-group {
+            margin-bottom: 15px;
         }
-        
-        /* Subtle UI blink animation for dystopian realism */
-        @keyframes pulse-slow {
-            0%, 100% { opacity: 0.3; }
-            50% { opacity: 1; }
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 5px;
+            font-size: 14px;
         }
-        .ui-pulse { animation: pulse-slow 3s infinite; }
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+        button {
+            background-color: #1a73e8;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            width: 100%;
+        }
+        button:hover {
+            background-color: #1557b0;
+        }
+        pre {
+            background-color: #272822;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-family: "Courier New", Courier, monospace;
+            font-size: 13px;
+            max-height: 400px;
+        }
+        .error {
+            color: #d93025;
+            background-color: #fce8e6;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+            display: none;
+        }
+        .tabs {
+            display: flex;
+            border-bottom: 20px;
+            margin-top: 20px;
+        }
+        .tab-btn {
+            background: none;
+            color: #5f6368;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-weight: 500;
+            width: auto;
+            border-bottom: 2px solid transparent;
+        }
+        .tab-btn.active {
+            color: #1a73e8;
+            border-bottom: 2px solid #1a73e8;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
     </style>
 </head>
-<body class="min-h-screen flex items-center justify-center p-4 antialiased text-slate-200">
+<body>
 
-    <main class="w-full max-w-lg">
-        <!-- Status / Loading Loader (Dystopian Boot Sequence) -->
-        <div id="status-message" class="text-center py-12 px-6 border border-cyan-500/20 bg-cyan-950/10 rounded-xl max-w-sm mx-auto shadow-[0_0_20px_rgba(6,182,212,0.05)]">
-            <div class="inline-block animate-spin rounded-full h-8 w-8 border-2 border-t-cyan-400 border-r-transparent border-slate-800 mr-3 align-middle"></div>
-            <span class="font-display tracking-widest text-cyan-400 text-sm uppercase">Syncing Planetary Core...</span>
+    <h2>Google Sheets Read-Only Database Test</h2>
+    <p style="color: #666; margin-top: -10px;">Ensure your Google Sheet is shared as <strong>"Anyone with the link can view"</strong> before testing.</p>
+
+    <div class="card">
+        <div class="form-group">
+            <label for="apiKey">Google Cloud API Key</label>
+            <input type="password" id="apiKey" placeholder="AIzaSy...">
         </div>
-        
-        <!-- Main Digital ID Dossier Card -->
-        <article id="db-content" class="hidden cyber-panel rounded-2xl border border-slate-700/50 overflow-hidden relative neon-border-blue">
-            
-            <!-- Tech Frame Corner Visual Accents -->
-            <div class="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-sky-400/60"></div>
-            <div class="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-sky-400/60"></div>
-            <div class="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-sky-400/60"></div>
-            <div class="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-sky-400/60"></div>
+        <div class="form-group">
+            <label for="sheetId">Spreadsheet ID</label>
+            <input type="text" id="sheetId" placeholder="1wX_..." />
+        </div>
+        <div class="form-group">
+            <label for="range">Sheet Name & Range (e.g. Sheet1!A1:E100)</label>
+            <input type="text" id="range" value="Sheet1!A1:Z100">
+        </div>
+        <button onclick="fetchSheetData()">Query Database</button>
+        <div id="errorMessage" class="error"></div>
+    </div>
 
-            <!-- Header System Band -->
-            <header class="bg-slate-950/80 px-6 py-4 flex justify-between items-center border-b border-slate-800">
-                <div class="flex items-center space-x-3">
-                    <!-- Blinking Active Status Light -->
-                    <span class="relative flex h-2.5 w-2.5">
-                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                        <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
-                    </span>
-                    <div>
-                        <h2 id="field-category" class="font-display text-[10px] font-bold tracking-widest text-sky-400 uppercase">SECTOR-01 OBJECTIVE</h2>
-                        <h1 class="font-display text-xs font-semibold text-slate-400 tracking-wider">OFF-WORLD POPULATION REGISTRY</h1>
-                    </div>
-                </div>
-                <div class="font-mono-tech text-[10px] text-slate-500 bg-slate-900 px-2 py-1 rounded border border-slate-800 tracking-tighter">
-                    SYS.VER // 4.81
-                </div>
-            </header>
+    <div id="resultsCard" class="card" style="display: none;">
+        <h3>Database Response</h3>
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('formatted')">Clean Objects (JSON)</button>
+            <button class="tab-btn" onclick="switchTab('raw')">Raw Array Response</button>
+        </div>
 
-            <!-- Main Layout Breakdown -->
-            <div class="p-6 space-y-6">
-                
-                <!-- Row 1: Profile Image and Core Primary Data -->
-                <div class="flex flex-col sm:flex-row gap-6 items-center sm:items-start">
-                    
-                    <!-- Digital Photo Slot -->
-                    <div class="relative shrink-0">
-                        <div class="w-32 aspect-[3/4] bg-slate-950/60 border border-slate-700 rounded-xl shadow-inner flex items-center justify-center overflow-hidden group relative">
-                            <!-- Live Spreadsheet Image Input -->
-                            
-                            
-                            <!-- Backup Cyber Vector Graphic Placeholder -->
-                            <svg id="photo-placeholder" class="w-14 h-14 text-slate-700/60 animate-pulse" fill="none" stroke="currentColor" stroke-width="1" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7 0 3.75 3.75 0 017 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/>
-                            </svg>
-                            
-                            <!-- Digital Scanline Graphic Overlay Overlay -->
-                            <div class="absolute inset-0 bg-gradient-to-b from-sky-500/5 via-transparent to-black/40 pointer-events-none"></div>
-                            <div class="absolute top-0 left-0 right-0 h-[2px] bg-sky-400/20 shadow-[0_0_8px_rgba(56,189,248,0.5)] animate-[bounce_4s_infinite_linear]"></div>
-                        </div>
-                        <div class="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-slate-900 border border-slate-700 px-2 py-0.5 rounded text-[8px] font-mono-tech tracking-wider uppercase text-slate-400 whitespace-nowrap shadow-md">
-                            Bio-Capture
-                        </div>
-                    </div>
-
-                    
-                    <div class="flex-1 w-full space-y-4">
-                        <div>
-                            <span class="block font-mono-tech text-[9px] text-slate-500 uppercase tracking-wider mb-0.5">Subject Identity Name</span>
-                            <span id="field-title" class="font-display text-xl font-bold uppercase tracking-wide block text-white drop-shadow-[0_2px_10px_rgba(255,255,255,0.05)]">--</span>
-                        </div>
-
-                        <div class="grid grid-cols-2 gap-4 border-t border-slate-800/80 pt-3">
-                            <div>
-                                <span class="block font-mono-tech text-[9px] text-slate-500 uppercase tracking-wider mb-0.5">Registry Index</span>
-                                <span id="field-id" class="font-mono-tech text-sm font-bold text-sky-400 tracking-wide block">--</span>
-                            </div>
-                            <div>
-                                <span class="block font-mono-tech text-[9px] text-slate-500 uppercase tracking-wider mb-0.5">Clearance Status</span>
-                                <span id="field-meta" class="font-display text-xs font-semibold text-amber-400 uppercase tracking-wider block pt-0.5">--</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Row 2: Character Background Dossier Information Block -->
-                <div class="bg-slate-950/40 border border-slate-800/60 rounded-xl p-4 relative overflow-hidden">
-                    <span class="block font-mono-tech text-[9px] text-slate-500 uppercase tracking-wider mb-1.5">Archival Intelligence Notes / Dossier Records</span>
-                    <p id="field-description" class="font-mono-tech text-slate-300 leading-relaxed text-xs min-h-[70px]">
-                        --
-                    </p>
-                    <!-- Background aesthetic radar pattern element -->
-                    <div class="absolute bottom-2 right-2 w-12 h-12 border border-slate-800/30 rounded-full flex items-center justify-center pointer-events-none ui-pulse">
-                        <div class="w-6 h-6 border border-slate-800/20 rounded-full"></div>
-                    </div>
-                </div>
-
-            </div>
-
-            <!-- Footer Decorative Terminal HUD Interface Metrics -->
-            <footer class="bg-slate-950/80 border-t border-slate-800 px-6 py-3 flex justify-between items-center text-[9px] font-mono-tech text-slate-500 tracking-tight select-none">
-                <div class="flex items-center space-x-2">
-                    <span class="text-sky-500/40">● LOCK ON</span>
-                    <span>NET.CONN_OK</span>
-                </div>
-                <div>AUTORUN // SUB_PROC_EXEC</div>
-            </footer>
-
-        </article>
-    </main>
+        <div id="formattedTab" class="tab-content active">
+            <pre><code id="formattedOutput">Fetching...</code></pre>
+        </div>
+        <div id="rawTab" class="tab-content">
+            <pre><code id="rawOutput">Fetching...</code></pre>
+        </div>
+    </div>
 
     <script>
-        // ==========================================
-        // DATABASE CONFIGURATION (FILL THIS OUT WHEN READY)
-        // ==========================================
-        const CONFIG = {
-            spreadsheetId: 'YOUR_SPREADSHEET_ID', 
-            apiKey: 'YOUR_GOOGLE_CLOUD_API_KEY',   
-            sheetName: 'Sheet1', 
-            keyColumn: 'id'      
-        };
+        async function fetchSheetData() {
+            const apiKey = document.getElementById('apiKey').value.trim();
+            const sheetId = document.getElementById('sheetId').value.trim();
+            const range = document.getElementById('range').value.trim();
+            const errorDiv = document.getElementById('errorMessage');
+            const resultsCard = document.getElementById('resultsCard');
 
-        const urlParams = new URLSearchParams(window.location.search);
-        const targetId = urlParams.get('id');
+            // Reset UI states
+            errorDiv.style.display = 'none';
+            resultsCard.style.display = 'none';
+
+            if (!apiKey || !sheetId || !range) {
+                showError('Please fill out all input parameters.');
+                return;
+            }
+
+            // Encode the range to handle special characters or spaces in the sheet name safely
+            const encodedRange = encodeURIComponent(range);
+            const url = `https://googleapis.com{sheetId}/values/${encodedRange}?key=${apiKey}`;
+
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error?.message || 'Failed to fetch spreadsheet data.');
+                }
+
+                if (!data.values || data.values.length === 0) {
+                    throw new Error('Spreadsheet was found, but the requested range is empty.');
+                }
+
+                resultsCard.style.display = 'block';
+                
+                // 1. Render Raw Array Structure
+                document.getElementById('rawOutput').textContent = JSON.stringify(data, null, 2);
+
+                // 2. Render Formatted Key-Value Database Structure
+                const databaseJson = convertRowsToObjects(data.values);
+                document.getElementById('formattedOutput').textContent = JSON.stringify(databaseJson, null, 2);
+
+            } catch (err) {
+                showError(err.message);
+            }
+        }
+
+        // Helper function mapping row indices to header titles
+        function convertRowsToObjects(rows) {
+            const headers = rows[0]; // First row contains structural headers
+            const dataRows = rows.slice(1); // Remaining array items represent data records
+
+            return dataRows.map(row => {
+                const record = {};
+                headers.forEach((header, index) => {
+                    // Handle trailing blank cells gracefully
+                    record[header] = row[index] !== undefined ? row[index] : "";
+                });
+                return record;
+            });
+        }
+
+        function showError(msg) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = msg;
+            errorDiv.style.display = 'block';
+        }
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+            if (tabName === 'formatted') {
+                document.getElementById('formattedTab').classList.add('active');
+                event.target.classList.add('active');
+            } else {
+                document.getElementById('rawTab').classList.add('active');
+                event.target.classList.add('active');
+            }
+        }
+    </script>
+</body>
+</html>
