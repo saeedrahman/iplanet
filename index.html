@@ -152,10 +152,12 @@
 
             // Encode the range to handle special characters or spaces in the sheet name safely
             const encodedRange = encodeURIComponent(range);
-            const url = `https://googleapis.com{sheetId}/values/${encodedRange}?key=${apiKey}`;
+            // DELETE YOUR OLD URL LINE AND PASTE THIS EXACTLY:
+            const correctUrl = "https://googleapis.com" + sheetId + "/values/" + encodedRange + "?key=" + apiKey;
 
             try {
-                const response = await fetch(url);
+                const response = await fetch(correctUrl);
+
                 const data = await response.json();
 
                 if (!response.ok) {
