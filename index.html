@@ -2,28 +2,21 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ARCHIVE // SUBJECT DOSSIER</title>
   
-  <!-- Mobile & PWA Fullscreen Meta Tags -->
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Archive">
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="theme-color" content="#08090c">
-
   <!-- Retro terminal font -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@500;800;900&display=swap" rel="stylesheet">
 
-  <!-- PapaParse for CSV parsing -->
+  <!-- PapaParse for robust CSV parsing -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 
   <style>
     :root {
       --bg-color: #08090c;
-      --card-bg: rgba(14, 18, 24, 0.88);
+      --card-bg: rgba(14, 18, 24, 0.85);
       --accent: #ff0055;       /* Warning Red/Pink */
       --cyan: #00ffcc;         /* HUD Cyan */
       --text: #d0d7de;
@@ -55,7 +48,7 @@
       content: " ";
       position: fixed;
       top: 0; left: 0; bottom: 0; right: 0;
-      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.45) 50%), 
+      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.4) 50%), 
                   linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
       background-size: 100% 3px, 3px 100%;
       pointer-events: none;
@@ -217,34 +210,12 @@
       background: rgba(0, 0, 0, 0.2);
       padding: 14px;
       border: 1px solid rgba(255, 255, 255, 0.05);
-      margin-bottom: 16px;
     }
 
     .bio-container::first-letter {
       font-size: 1.4rem;
       color: var(--cyan);
       font-weight: bold;
-    }
-
-    /* Fullscreen Trigger Button */
-    .fullscreen-btn {
-      display: block;
-      width: 100%;
-      padding: 12px;
-      background: rgba(0, 255, 204, 0.08);
-      border: 1px solid var(--cyan);
-      color: var(--cyan);
-      font-family: 'Share Tech Mono', monospace;
-      font-size: 0.85rem;
-      letter-spacing: 1.5px;
-      cursor: pointer;
-      text-transform: uppercase;
-      transition: background 0.2s ease, box-shadow 0.2s ease;
-    }
-
-    .fullscreen-btn:hover, .fullscreen-btn:active {
-      background: rgba(0, 255, 204, 0.2);
-      box-shadow: 0 0 10px rgba(0, 255, 204, 0.3);
     }
 
     /* System Status Messages */
@@ -282,28 +253,10 @@
     // Fallback placeholder image if no photo URL is supplied
     const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300' fill='%23111'%3E%3Crect width='100%25' height='100%25'/%3E%3Ctext x='50%25' y='50%25' fill='%2300ffcc' font-family='monospace' font-size='16' text-anchor='middle'%3E%5B IMAGE CORRUPTED / NOT FOUND %5D%3C/text%3E%3C/svg%3E";
 
-    // Extract query parameter ?id=... from the URL
+    // Extract query parameter ?id=... from the page URL
     function getQueryParam(param) {
       const urlParams = new URLSearchParams(window.location.search);
       return urlParams.get(param);
-    }
-
-    // Toggle full-screen mode & hide the trigger button
-    function toggleFullScreen() {
-      const doc = window.document;
-      const docEl = doc.documentElement;
-
-      const requestFullScreen = docEl.requestFullscreen || docEl.mozRequestFullScreen || docEl.webkitRequestFullScreen || docEl.msRequestFullscreen;
-
-      if (!doc.fullscreenElement && !doc.mozFullScreenElement && !doc.webkitFullscreenElement && !doc.msFullscreenElement) {
-        if (requestFullScreen) {
-          requestFullScreen.call(docEl);
-        }
-      }
-      
-      // Hide button once tapped
-      const btn = document.getElementById('fs-btn');
-      if (btn) btn.style.display = 'none';
     }
 
     function renderError(title, subtitle) {
@@ -348,10 +301,6 @@
         <div class="bio-container">
           ${data.bio || 'Record corrupted or redacted by administrative order.'}
         </div>
-
-        <button id="fs-btn" class="fullscreen-btn" onclick="toggleFullScreen()">
-          [ MAXIMIZE TERMINAL / FULLSCREEN ]
-        </button>
       `;
     }
 
