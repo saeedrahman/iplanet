@@ -424,7 +424,7 @@
       };
 
       // Extracted fields with synonyms to prevent sheet formatting mismatches
-      const idNum = getVal(['id_number', 'idnumber', 'id']);
+      const id = getVal(['id', 'idnumber']);
       const identity = getVal(['identity', 'name', 'unit']);
       const prodDate = getVal(['date_of_production', 'production_date', 'date']);
       const mathSci = getVal(['mathematics_scientific_ability', 'mathematics', 'math', 'scientific']);
@@ -531,7 +531,7 @@
     }
 
     async function loadCastData() {
-      const targetId = getQueryParam('id') || getQueryParam('id_number');
+      const targetId = getQueryParam('id') || getQueryParam('id');
 
       if (!targetId) {
         renderError("SCAN TAG REQUIRED", "No personnel identification code detected. Please scan an authorized unit tag.");
