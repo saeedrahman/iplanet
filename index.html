@@ -1,80 +1,343 @@
-    <script>
-        async function fetchSheetData() {
-            const apiKey = document.getElementById('apiKey').value.trim();
-            const sheetId = document.getElementById('sheetId').value.trim();
-            const range = document.getElementById('range').value.trim();
-            const errorDiv = document.getElementById('errorMessage');
-            const resultsCard = document.getElementById('resultsCard');
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ARCHIVE // SUBJECT DOSSIER</title>
+  
+  <!-- Retro terminal font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@500;800;900&display=swap" rel="stylesheet">
 
-            // Reset UI states
-            errorDiv.style.display = 'none';
-            resultsCard.style.display = 'none';
+  <!-- PapaParse for robust CSV parsing -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 
-            if (!apiKey || !sheetId || !range) {
-                showError('Please fill out all input parameters.');
-                return;
-            }
+  <style>
+    :root {
+      --bg-color: #08090c;
+      --card-bg: rgba(14, 18, 24, 0.85);
+      --accent: #ff0055;       /* Warning Red/Pink */
+      --cyan: #00ffcc;         /* HUD Cyan */
+      --text: #d0d7de;
+      --text-muted: #6e7681;
+      --border: rgba(0, 255, 204, 0.3);
+    }
 
-            const encodedRange = encodeURIComponent(range);
-            
-            // Fixed URL format using explicit concatenation
-            const finalUrl = "https://googleapis.com" + sheetId + "/values/" + encodedRange + "?key=" + apiKey;
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
-            try {
-                const response = await fetch(finalUrl);
-                const data = await response.json();
+    body {
+      background-color: var(--bg-color);
+      color: var(--text);
+      font-family: 'Share Tech Mono', monospace;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      position: relative;
+      overflow-x: hidden;
+    }
 
-                if (!response.ok) {
-                    throw new Error(data.error?.message || 'Failed to fetch spreadsheet data.');
-                }
+    /* CRT Scanline & Grain Overlay */
+    body::before {
+      content: " ";
+      position: fixed;
+      top: 0; left: 0; bottom: 0; right: 0;
+      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.4) 50%), 
+                  linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+      background-size: 100% 3px, 3px 100%;
+      pointer-events: none;
+      z-index: 100;
+    }
 
-                if (!data.values || data.values.length === 0) {
-                    throw new Error('Spreadsheet was found, but the requested range is empty.');
-                }
+    /* Ambient background grid */
+    .bg-grid {
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      background-image: 
+        linear-gradient(to right, rgba(0, 255, 204, 0.05) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(0, 255, 204, 0.05) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
 
-                resultsCard.style.display = 'block';
-                
-                // Render Raw Array Structure
-                document.getElementById('rawOutput').textContent = JSON.stringify(data, null, 2);
+    .dossier-card {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 480px;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      box-shadow: 0 0 25px rgba(0, 255, 204, 0.15), inset 0 0 15px rgba(0, 0, 0, 0.8);
+      padding: 28px 24px;
+      backdrop-filter: blur(8px);
+    }
 
-                // Render Formatted Key-Value Database Structure
-                const databaseJson = convertRowsToObjects(data.values);
-                document.getElementById('formattedOutput').textContent = JSON.stringify(databaseJson, null, 2);
+    /* Tech corner accents */
+    .dossier-card::before, .dossier-card::after {
+      content: "";
+      position: absolute;
+      width: 12px;
+      height: 12px;
+      border-color: var(--cyan);
+      pointer-events: none;
+    }
+    .dossier-card::before {
+      top: -1px; left: -1px;
+      border-top: 3px solid var(--cyan);
+      border-left: 3px solid var(--cyan);
+    }
+    .dossier-card::after {
+      bottom: -1px; right: -1px;
+      border-bottom: 3px solid var(--cyan);
+      border-right: 3px solid var(--cyan);
+    }
 
-            } catch (err) {
-                showError(err.message);
-            }
+    /* Header & Badges */
+    .system-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px dashed var(--border);
+      padding-bottom: 12px;
+      margin-bottom: 20px;
+      font-size: 0.8rem;
+      letter-spacing: 1px;
+      color: var(--cyan);
+    }
+
+    .status-badge {
+      background: rgba(255, 0, 85, 0.15);
+      border: 1px solid var(--accent);
+      color: var(--accent);
+      padding: 2px 8px;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    /* Profile Image Box */
+    .photo-frame {
+      width: 100%;
+      height: 260px;
+      background: #000;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      position: relative;
+      margin-bottom: 20px;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .photo-frame img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      filter: grayscale(80%) contrast(120%) brightness(90%);
+    }
+
+    .photo-frame .reticle {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      font-size: 0.7rem;
+      color: var(--cyan);
+      opacity: 0.7;
+    }
+
+    /* Identity & Details */
+    .character-name {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.8rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: #fff;
+      text-shadow: 0 0 10px rgba(0, 255, 204, 0.4);
+      margin-bottom: 6px;
+    }
+
+    .character-role {
+      font-size: 1.05rem;
+      color: var(--cyan);
+      margin-bottom: 16px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .meta-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      background: rgba(0, 0, 0, 0.4);
+      padding: 12px;
+      border-left: 2px solid var(--accent);
+      margin-bottom: 20px;
+      font-size: 0.85rem;
+    }
+
+    .meta-item span {
+      display: block;
+      color: var(--text-muted);
+      font-size: 0.7rem;
+      text-transform: uppercase;
+    }
+
+    .meta-item strong {
+      color: #fff;
+      font-weight: normal;
+    }
+
+    /* Bio Narrative */
+    .bio-container {
+      font-size: 0.95rem;
+      line-height: 1.6;
+      color: #c4cdd5;
+      text-align: justify;
+      background: rgba(0, 0, 0, 0.2);
+      padding: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .bio-container::first-letter {
+      font-size: 1.4rem;
+      color: var(--cyan);
+      font-weight: bold;
+    }
+
+    /* System Status Messages */
+    .terminal-message {
+      text-align: center;
+      padding: 40px 10px;
+      color: var(--cyan);
+    }
+
+    .terminal-message .glitch-alert {
+      color: var(--accent);
+      font-size: 1.2rem;
+      margin-bottom: 10px;
+      font-family: 'Orbitron', sans-serif;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="bg-grid"></div>
+
+  <div class="dossier-card" id="app">
+    <div class="terminal-message">
+      <p>INITIALIZING DATA LINK...</p>
+      <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 8px;">DECRYPTING CITIZEN REGISTRY</p>
+    </div>
+  </div>
+
+  <script>
+    // -------------------------------------------------------------
+    // 1. PASTE YOUR PUBLISHED GOOGLE SHEET CSV URL HERE:
+    // -------------------------------------------------------------
+    const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRlmhjhIPa6cbXQecsfKAlLoLilr1NAV2QGqepe_rf9_E3CTB-T-Jlpd1rge93AsT-2CtXoh5spt3qY/pub?output=csv";
+
+    // Fallback placeholder image if no photo URL is supplied
+    const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300' fill='%23111'%3E%3Crect width='100%25' height='100%25'/%3E%3Ctext x='50%25' y='50%25' fill='%2300ffcc' font-family='monospace' font-size='16' text-anchor='middle'%3E%5B IMAGE CORRUPTED / NOT FOUND %5D%3C/text%3E%3C/svg%3E";
+
+    // Extract query parameter ?id=... from the page URL
+    function getQueryParam(param) {
+      const urlParams = new URLSearchParams(window.location.search);
+      return urlParams.get(param);
+    }
+
+    function renderError(title, subtitle) {
+      document.getElementById('app').innerHTML = `
+        <div class="system-header">
+          <span>SYS.ERR // 404</span>
+          <span class="status-badge">ERROR</span>
+        </div>
+        <div class="terminal-message">
+          <div class="glitch-alert">${title}</div>
+          <p style="font-size: 0.85rem; color: var(--text-muted);">${subtitle}</p>
+        </div>
+      `;
+    }
+
+    function renderDossier(data) {
+      document.getElementById('app').innerHTML = `
+        <div class="system-header">
+          <span>ARCHIVE REGISTRY // SECTOR 07</span>
+          <span class="status-badge">CLASSIFIED</span>
+        </div>
+
+        <div class="photo-frame">
+          <div class="reticle">REC ● [TARGET ACQUIRED]</div>
+          <img src="${data.photo && data.photo.trim() !== '' ? data.photo : DEFAULT_AVATAR}" alt="${data.name}" onerror="this.src='${DEFAULT_AVATAR}'">
+        </div>
+
+        <h1 class="character-name">${data.name || 'UNKNOWN SUBJECT'}</h1>
+        <div class="character-role">${data.role || 'ROLE UNASSIGNED'}</div>
+
+        <div class="meta-grid">
+          <div class="meta-item">
+            <span>PERFORMED BY</span>
+            <strong>${data.actor || 'ANONYMOUS'}</strong>
+          </div>
+          <div class="meta-item">
+            <span>FACTION / STATUS</span>
+            <strong>${data.faction || 'CIVILIAN'}</strong>
+          </div>
+        </div>
+
+        <div class="bio-container">
+          ${data.bio || 'Record corrupted or redacted by administrative order.'}
+        </div>
+      `;
+    }
+
+    async function loadCastData() {
+      const targetId = getQueryParam('id');
+
+      if (!targetId) {
+        renderError("SCAN CODE REQUIRED", "No citizen ID detected. Please scan an authorized personnel tag.");
+        return;
+      }
+
+      Papa.parse(SHEET_CSV_URL, {
+        download: true,
+        header: true,
+        skipEmptyLines: true,
+        complete: function(results) {
+          const records = results.data;
+          
+          // Match by 'id' column (case-insensitive and trimmed)
+          const matched = records.find(row => 
+            row.id && row.id.toString().trim().toLowerCase() === targetId.trim().toLowerCase()
+          );
+
+          if (matched) {
+            renderDossier(matched);
+          } else {
+            renderError("SUBJECT NOT FOUND", `ID [${targetId}] does not exist in central surveillance records.`);
+          }
+        },
+        error: function(err) {
+          console.error(err);
+          renderError("DATA STREAM OFFLINE", "Failed to retrieve archive from terminal network. Verify your Google Sheet publication link.");
         }
+      });
+    }
 
-        function convertRowsToObjects(rows) {
-            const headers = rows[0]; 
-            const dataRows = rows.slice(1); 
-
-            return dataRows.map(row => {
-                const record = {};
-                headers.forEach((header, index) => {
-                    record[header] = row[index] !== undefined ? row[index] : "";
-                });
-                return record;
-            });
-        }
-
-        function showError(msg) {
-            const errorDiv = document.getElementById('errorMessage');
-            errorDiv.textContent = msg;
-            errorDiv.style.display = 'block';
-        }
-
-        function switchTab(tabName) {
-            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-
-            if (tabName === 'formatted') {
-                document.getElementById('formattedTab').classList.add('active');
-                event.target.classList.add('active');
-            } else {
-                document.getElementById('rawTab').classList.add('active');
-                event.target.classList.add('active');
-            }
-        }
-    </script>
+    window.addEventListener('DOMContentLoaded', loadCastData);
+  </script>
+</body>
+</html>
