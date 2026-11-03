@@ -433,7 +433,7 @@
     // -------------------------------------------------------------
     // PASTE YOUR PUBLISHED GOOGLE SHEET CSV URL HERE:
     // -------------------------------------------------------------
-    const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRlmhjhIPa6cbXQecsfKAlLoLilr1NAV2QGqepe_rf9_E3CTB-T-Jlpd1rge93AsT-2CtXoh5spt3qY/pub?output=csv";
+    const SHEET_CSV_URL = "PASTE_YOUR_PUBLISHED_GOOGLE_SHEET_CSV_URL_HERE";
 
     // 10-star rating scale
     const MAX_STARS = 10;
@@ -503,7 +503,6 @@
       const notableTrait = getVal(['notable_trait', 'trait']);
       const areaConcern = getVal(['area_of_concern', 'concern']);
       
-      // Image URL column lookup
       const imageUrl = getVal(['image', 'photo', 'picture', 'character_image', 'headshot']);
 
       // Hazard triggered when creativity >= 6 stars out of 10
@@ -548,7 +547,7 @@
           </div>
         </div>
 
-        <div class="section-title">CAPABILITY RATINGS [OUT OF 10]</div>
+        <div class="section-title">PSYCH-APTITUDE METRICS [OUT OF 10]</div>
         <div class="stat-list">
           <div class="stat-row">
             <span class="stat-label">Overall Intelligence</span>
@@ -605,7 +604,7 @@
       `;
     }
 
-    async function loadCastData() {
+    async function loadCastData(retryCount = 0) {
       const targetId = getQueryParam('id') || getQueryParam('id_number');
 
       if (!targetId) {
@@ -613,41 +612,75 @@
         return;
       }
 
-      Papa.parse(SHEET_CSV_URL, {
-        download: true,
-        header: true,
-        skipEmptyLines: true,
-        transformHeader: function(h) {
-          return h.replace(/^\ufeff/, '').trim().toLowerCase();
-        },
-        complete: function(results) {
-          const records = results.data;
-          const cleanTarget = decodeURIComponent(targetId).trim().toLowerCase();
+      // Force mobile browsers and Google CDN to bust cache with a unique timestamp
+      const separator = SHEET_CSV_URL.includes('?') ? '&' : '?';
+      const freshUrl = `${SHEET_CSV_URL}${separator}_t=${Date.now()}`;
 
-          const matched = records.find(row => {
-            const idKey = Object.keys(row).find(k => {
-              const cleanedKey = k.replace(/[^a-z0-9]/g, '').toLowerCase();
-              return cleanedKey === 'idnumber' || cleanedKey === 'id';
+      try {
+        const response = await fetch(freshUrl, { cache: 'no-store' });
+        
+        if (!response.ok) {
+          throw new Error(`HTTP Error: ${response.status}`);
+        }
+
+        const csvText = await response.text();
+
+        Papa.parse(csvText, {
+          header: true,
+          skipEmptyLines: true,
+          transformHeader: function(h) {
+            return h.replace(/^\ufeff/, '').trim().toLowerCase();
+          },
+          complete: function(results) {
+            const records = results.data;
+            const cleanTarget = decodeURIComponent(targetId).trim().toLowerCase();
+
+            // Guard against empty / incomplete initial loads
+            if (!records || records.length === 0) {
+              if (retryCount < 2) {
+                setTimeout(() => loadCastData(retryCount + 1), 600);
+                return;
+              }
+            }
+
+            const matched = records.find(row => {
+              const idKey = Object.keys(row).find(k => {
+                const cleanedKey = k.replace(/[^a-z0-9]/g, '').toLowerCase();
+                return cleanedKey === 'idnumber' || cleanedKey === 'id';
+              });
+              if (!idKey || row[idKey] === undefined || row[idKey] === null) return false;
+              return row[idKey].toString().trim().toLowerCase() === cleanTarget;
             });
-            if (!idKey || row[idKey] === undefined || row[idKey] === null) return false;
-            return row[idKey].toString().trim().toLowerCase() === cleanTarget;
-          });
 
-          if (matched) {
-            renderDossier(matched);
-          } else {
-            console.warn("Parsed records from sheet:", records);
-            renderError("SUBJECT NOT FOUND", `Unit ID [${targetId}] does not exist in production archives.`);
+            if (matched) {
+              renderDossier(matched);
+            } else {
+              if (retryCount < 2) {
+                // Retry once in case stream completed partially
+                setTimeout(() => loadCastData(retryCount + 1), 750);
+              } else {
+                console.warn("Parsed records from sheet:", records);
+                renderError("SUBJECT NOT FOUND", `Unit ID [${targetId}] does not exist in production archives.`);
+              }
+            }
+          },
+          error: function(err) {
+            console.error(err);
+            renderError("DATA STREAM OFFLINE", "Failed to parse records from central network.");
           }
-        },
-        error: function(err) {
-          console.error(err);
+        });
+
+      } catch (err) {
+        console.error(err);
+        if (retryCount < 2) {
+          setTimeout(() => loadCastData(retryCount + 1), 800);
+        } else {
           renderError("DATA STREAM OFFLINE", "Failed to retrieve archive from terminal network. Verify your Google Sheet publication link.");
         }
-      });
+      }
     }
 
-    window.addEventListener('DOMContentLoaded', loadCastData);
+    window.addEventListener('DOMContentLoaded', () => loadCastData(0));
   </script>
 </body>
 </html>
