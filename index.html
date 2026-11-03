@@ -492,7 +492,7 @@
 
       const idNum = getVal(['id_number', 'idnumber', 'id']);
       const identity = getVal(['identity', 'name', 'unit']);
-      const prodDate = getVal(['date_of_production', 'production_date', 'date']);
+      const rawDate = getVal(['date_of_production', 'production_date', 'date', 'dob', 'date_of_birth']);
       const mathSci = getVal(['mathematics_scientific_ability', 'mathematics', 'math', 'scientific']);
       const linguistic = getVal(['linguistic_ability', 'linguistic', 'language']);
       const discipline = getVal(['discipline_obedience', 'discipline', 'obedience']);
@@ -504,6 +504,10 @@
       const areaConcern = getVal(['area_of_concern', 'concern']);
       
       const imageUrl = getVal(['image', 'photo', 'picture', 'character_image', 'headshot']);
+
+      // Conditional check: if identity contains "bot", display "PRODUCTION DATE", else "DATE OF BIRTH"
+      const isBot = identity.toLowerCase().trim().includes('bot');
+      const dateLabel = isBot ? 'PRODUCTION DATE' : 'DATE OF BIRTH';
 
       // Hazard triggered when creativity >= 6 stars out of 10
       const creativityMatch = creativity.match(/\d+/);
@@ -541,8 +545,8 @@
               <strong>${idNum}</strong>
             </div>
             <div class="meta-item">
-              <span>PRODUCTION DATE</span>
-              <strong>${prodDate}</strong>
+              <span>${dateLabel}</span>
+              <strong>${rawDate}</strong>
             </div>
           </div>
         </div>
